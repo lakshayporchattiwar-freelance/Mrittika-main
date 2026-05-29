@@ -1,0 +1,10 @@
+<svg width="800" height="1000" viewBox="0 0 800 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="1000" rx="80" fill="#f7f0e6"/>
+  <circle cx="280" cy="260" r="170" fill="#c1622b" opacity="0.5"/>
+  <circle cx="540" cy="640" r="210" fill="#7a9e6e" opacity="0.25"/>
+  <rect x="240" y="320" width="320" height="460" rx="70" fill="#fdf8f2" stroke="#c1622b" stroke-width="6"/>
+  <rect x="300" y="390" width="200" height="280" rx="40" fill="#ede4d3"/>
+  <text x="400" y="740" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="34" fill="#3b2e24">
+    Rose Clay
+  </text>
+</svg>

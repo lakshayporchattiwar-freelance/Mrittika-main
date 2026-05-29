@@ -1,0 +1,15 @@
+.policy h1 {
+  font-size: var(--text-3xl);
+  margin-bottom: var(--space-4);
+}
+
+.content {
+  max-width: 760px;
+  margin: 0 auto;
+  display: grid;
+  gap: var(--space-4);
+}
+
+.content p {
+  color: var(--color-text-muted);
+}

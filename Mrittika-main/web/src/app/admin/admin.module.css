@@ -1,0 +1,46 @@
+.admin h1 {
+  font-size: var(--text-3xl);
+  margin-bottom: var(--space-4);
+}
+
+.login {
+  max-width: 420px;
+  margin: 0 auto;
+  display: grid;
+  gap: var(--space-4);
+  background: var(--color-white-warm);
+  padding: var(--space-10);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.error {
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-8);
+}
+
+.table {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-white-warm);
+  box-shadow: var(--shadow-xs);
+}
+
+.tableRow:first-child {
+  font-weight: 600;
+  background: var(--color-cream-deep);
+}

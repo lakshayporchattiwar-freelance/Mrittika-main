@@ -1,0 +1,90 @@
+.cart h1 {
+  font-size: var(--text-3xl);
+  margin-bottom: var(--space-8);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-12);
+}
+
+.items {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.item {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: var(--space-4);
+  align-items: center;
+  background: var(--color-white-warm);
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.itemInfo h3 {
+  margin-bottom: var(--space-2);
+}
+
+.qty {
+  display: inline-flex;
+  gap: var(--space-2);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-full);
+  padding: 0.25rem 0.8rem;
+  margin-top: var(--space-2);
+}
+
+.qty button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.price {
+  font-weight: 600;
+}
+
+.remove {
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--color-primary);
+}
+
+.summary {
+  background: var(--color-cream-deep);
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+
+.row,
+.total {
+  display: flex;
+  justify-content: space-between;
+}
+
+.total {
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.coupon {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.payments {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  font-size: var(--text-xs);
+}

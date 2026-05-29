@@ -1,0 +1,42 @@
+.success {
+  display: flex;
+  align-items: center;
+  min-height: 70vh;
+}
+
+.card {
+  max-width: 520px;
+  margin: 0 auto;
+  text-align: center;
+  background: var(--color-white-warm);
+  padding: var(--space-12);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.check {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-full);
+  background: var(--color-natural);
+  color: white;
+  font-size: 2.5rem;
+  display: grid;
+  place-items: center;
+  margin: 0 auto;
+}
+
+.meta {
+  display: grid;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}

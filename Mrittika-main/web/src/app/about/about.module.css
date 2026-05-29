@@ -1,0 +1,48 @@
+.about h1 {
+  font-size: var(--text-4xl);
+  margin-bottom: var(--space-4);
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: var(--space-16);
+}
+
+.timeline {
+  display: grid;
+  gap: var(--space-6);
+  margin-bottom: var(--space-16);
+}
+
+.timelineItem {
+  padding: var(--space-6);
+  border-left: 4px solid var(--color-primary);
+  background: var(--color-white-warm);
+  border-radius: var(--radius-md);
+}
+
+.timelineItem span {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.values {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-6);
+  margin-bottom: var(--space-16);
+}
+
+.valueCard {
+  background: var(--color-white-warm);
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.team {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-10);
+  align-items: center;
+}

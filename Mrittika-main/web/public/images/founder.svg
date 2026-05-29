@@ -1,0 +1,11 @@
+<svg width="800" height="900" viewBox="0 0 800 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="900" rx="120" fill="#ede4d3"/>
+  <circle cx="400" cy="320" r="160" fill="#fdf8f2"/>
+  <rect x="220" y="470" width="360" height="260" rx="120" fill="#f7f0e6"/>
+  <circle cx="340" cy="300" r="18" fill="#3b2e24"/>
+  <circle cx="460" cy="300" r="18" fill="#3b2e24"/>
+  <path d="M330 370C360 400 440 400 470 370" stroke="#3b2e24" stroke-width="8" stroke-linecap="round"/>
+  <text x="400" y="820" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="32" fill="#3b2e24">
+    Founder Portrait
+  </text>
+</svg>

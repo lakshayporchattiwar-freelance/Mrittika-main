@@ -1,0 +1,35 @@
+.contact h1 {
+  font-size: var(--text-3xl);
+  margin-bottom: var(--space-4);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-12);
+}
+
+.form {
+  display: grid;
+  gap: var(--space-4);
+  background: var(--color-white-warm);
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.form textarea {
+  resize: vertical;
+}
+
+.info {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+
+.map {
+  height: 260px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(122, 158, 110, 0.25), rgba(232, 169, 126, 0.35));
+}

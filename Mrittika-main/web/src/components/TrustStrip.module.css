@@ -1,0 +1,31 @@
+.strip {
+  background: var(--color-cream-deep);
+  padding: var(--space-6) 0;
+  border-top: 1px solid var(--color-border-soft);
+  border-bottom: 1px solid var(--color-border-soft);
+}
+
+.items {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-dark);
+}
+
+.icon {
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .items {
+    justify-content: center;
+  }
+}

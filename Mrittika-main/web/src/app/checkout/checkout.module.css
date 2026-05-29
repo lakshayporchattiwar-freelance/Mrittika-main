@@ -1,0 +1,72 @@
+.checkout h1 {
+  font-size: var(--text-3xl);
+  margin-bottom: var(--space-6);
+}
+
+.progress {
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+  font-size: var(--text-sm);
+}
+
+.active {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-12);
+}
+
+.form {
+  display: grid;
+  gap: var(--space-4);
+  background: var(--color-white-warm);
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-3);
+}
+
+.checkbox {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.summary {
+  background: var(--color-cream-deep);
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+
+.row,
+.total {
+  display: flex;
+  justify-content: space-between;
+}
+
+.total {
+  font-weight: 600;
+  font-size: var(--text-lg);
+}
+
+.payment {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.error {
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+}

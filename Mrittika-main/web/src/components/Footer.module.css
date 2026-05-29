@@ -1,0 +1,72 @@
+.footer {
+  background: var(--color-text-dark);
+  color: var(--color-white-warm);
+  padding: var(--space-24) 0 var(--space-8);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-12);
+}
+
+.brand h2 {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-4);
+}
+
+.brand p {
+  color: rgba(253, 248, 242, 0.7);
+}
+
+.socials {
+  margin-top: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.footer h3 {
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  margin-bottom: var(--space-4);
+}
+
+.footer a {
+  color: rgba(253, 248, 242, 0.7);
+  display: block;
+  margin-bottom: var(--space-2);
+  transition: color var(--duration-normal) var(--ease-out);
+}
+
+.footer a:hover {
+  color: var(--color-cta);
+}
+
+.bottom {
+  margin-top: var(--space-16);
+  padding-top: var(--space-6);
+  border-top: 1px solid rgba(253, 248, 242, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: center;
+  font-size: var(--text-sm);
+  color: rgba(253, 248, 242, 0.7);
+}
+
+.payments {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.payments span {
+  border: 1px solid rgba(253, 248, 242, 0.3);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+}

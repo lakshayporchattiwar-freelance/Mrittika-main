@@ -1,0 +1,10 @@
+<svg width="800" height="1000" viewBox="0 0 800 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="1000" rx="80" fill="#f7f0e6"/>
+  <circle cx="260" cy="280" r="160" fill="#e8a97e" opacity="0.7"/>
+  <circle cx="520" cy="620" r="200" fill="#c1622b" opacity="0.25"/>
+  <rect x="230" y="330" width="340" height="420" rx="70" fill="#fdf8f2" stroke="#c1622b" stroke-width="6"/>
+  <rect x="300" y="380" width="200" height="260" rx="40" fill="#ede4d3"/>
+  <text x="400" y="720" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="36" fill="#3b2e24">
+    Ubtan
+  </text>
+</svg>

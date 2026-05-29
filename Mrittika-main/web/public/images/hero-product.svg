@@ -1,0 +1,10 @@
+<svg width="900" height="1100" viewBox="0 0 900 1100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="900" height="1100" rx="180" fill="#fdf8f2"/>
+  <path d="M120 180C120 120 180 60 260 60H640C720 60 780 120 780 200V820C780 900 720 960 640 960H300C200 960 120 880 120 780V180Z" fill="#ede4d3"/>
+  <circle cx="660" cy="320" r="140" fill="#e8a97e" opacity="0.6"/>
+  <circle cx="300" cy="760" r="180" fill="#7a9e6e" opacity="0.35"/>
+  <rect x="300" y="300" width="300" height="520" rx="80" fill="#f7f0e6" stroke="#c1622b" stroke-width="6"/>
+  <text x="450" y="900" text-anchor="middle" font-family="Cormorant Garamond, serif" font-size="48" fill="#3b2e24">
+    Ritual Care
+  </text>
+</svg>
