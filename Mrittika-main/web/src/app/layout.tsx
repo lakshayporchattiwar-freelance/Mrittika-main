@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { CartProvider } from "@/lib/CartContext";
+import { CartProvider } from "@/context/CartContext";
 
 export const metadata: Metadata = {
   title: "Mrittika — Natural Skincare Handcrafted for Indian Skin",
@@ -12,9 +13,9 @@ export const metadata: Metadata = {
     "natural face pack India, ubtan face pack, botanical skincare, handmade skincare India, Mrittika",
   metadataBase: new URL("https://mrittika-main.vercel.app"),
   icons: {
-    icon: "/images/mrittika-logo.png",
-    shortcut: "/images/mrittika-logo.png",
-    apple: "/images/mrittika-logo.png",
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
   },
   openGraph: {
     title: "Mrittika — Natural Skincare Handcrafted for Indian Skin",
@@ -61,6 +62,7 @@ export default function RootLayout({
           <main id="main" className="animate-page-in">{children}</main>
         </CartProvider>
         <Footer />
+        <Analytics />
       </body>
     </html>
   );

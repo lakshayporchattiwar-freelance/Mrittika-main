@@ -2,13 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCart } from "@/lib/CartContext";
+import { useCart } from "@/context/CartContext";
 import styles from "./cart.module.css";
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, subtotal } = useCart();
-  const shipping = subtotal >= 499 ? 0 : 49;
-  const total = subtotal + shipping;
+  const { items, removeItem, updateQty, total } = useCart();
+  const shipping = total >= 499 ? 0 : 49;
+  const grandTotal = total + shipping;
 
   return (
     <section className={`section ${styles.cart}`}>
@@ -34,12 +34,12 @@ export default function CartPage() {
                     <h3>{item.name}</h3>
                     <p className="text-muted">100g</p>
                     <div className={styles.qty}>
-                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</button>
-                      <span>{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
+                      <button onClick={() => updateQty(item.id, item.qty - 1)}>-</button>
+                      <span>{item.qty}</span>
+                      <button onClick={() => updateQty(item.id, item.qty + 1)}>+</button>
                     </div>
                   </div>
-                  <div className={styles.price}>₹{item.price * item.quantity}</div>
+                  <div className={styles.price}>₹{item.price * item.qty}</div>
                   <button className={styles.remove} onClick={() => removeItem(item.id)}>×</button>
                 </div>
               ))}
@@ -48,7 +48,7 @@ export default function CartPage() {
               <h2>Order Summary</h2>
               <div className={styles.row}>
                 <span>Subtotal</span>
-                <span>₹{subtotal}</span>
+                <span>₹{total}</span>
               </div>
               <div className={styles.row}>
                 <span>Shipping</span>
@@ -56,7 +56,7 @@ export default function CartPage() {
               </div>
               <div className={styles.total}>
                 <span>Total</span>
-                <span>₹{total}</span>
+                <span>₹{grandTotal}</span>
               </div>
               <div className={styles.coupon}>
                 <input className="input" placeholder="Coupon code" />

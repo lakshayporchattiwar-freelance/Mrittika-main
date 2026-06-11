@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useCart } from "@/lib/CartContext";
+import { useCart } from "@/context/CartContext";
 import WishlistButton from "@/components/WishlistButton";
 import styles from "./ProductCard.module.css";
 import type { Product } from "@/data/products";
@@ -21,6 +21,17 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
     hovered && product.images.length > 1
       ? product.images[1]
       : product.images[0];
+
+  const handleAdd = () => {
+    addItem({
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      price: product.price,
+      qty: 1,
+      image: product.image,
+    });
+  };
 
   return (
     <div
@@ -45,7 +56,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         <p className={styles.desc}>{product.shortDescription}</p>
         <span className={styles.price}>₹{product.price}</span>
         <div className={styles.actions}>
-          <button className={styles.btnCart} onClick={() => addItem(product.id)}>
+          <button className={styles.btnCart} onClick={handleAdd}>
             Add to Cart
           </button>
           <Link href={`/product/${product.slug}`} className={styles.btnBuy}>

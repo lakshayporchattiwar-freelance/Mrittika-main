@@ -3,9 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { useCart } from "@/lib/CartContext";
+import { useCart } from "@/context/CartContext";
 import { getWishlistCount } from "@/lib/wishlist";
 import SearchOverlay from "@/components/SearchOverlay";
+import { Package } from "lucide-react";
 import styles from "./Navbar.module.css";
 
 const navLinks = [
@@ -27,7 +28,7 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [accountOpen, setAccountOpen] = useState(false);
-  const { totalItems } = useCart();
+  const { count } = useCart();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -93,6 +94,9 @@ export default function Navbar() {
               </svg>
               {wishlistCount > 0 && <span className={styles.badge}>{wishlistCount}</span>}
             </Link>
+            <Link href="/orders" className={styles.iconButton} aria-label="My Orders" title="My Orders">
+              <Package size={20} />
+            </Link>
             <Link href="/cart" className={styles.iconButton} aria-label="Cart">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path
@@ -101,7 +105,7 @@ export default function Navbar() {
                 />
                 <path d="M9 9V6a3 3 0 0 1 6 0v3" strokeWidth="1.5" />
               </svg>
-              {totalItems > 0 && <span className={styles.badge}>{totalItems}</span>}
+              {count > 0 && <span className={styles.badge}>{count}</span>}
             </Link>
             <button
               className={styles.menuButton}

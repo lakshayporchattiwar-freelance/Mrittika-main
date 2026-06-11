@@ -6,17 +6,16 @@ import Image from "next/image";
 import { Heart } from "lucide-react";
 import { getWishlist, removeFromWishlist } from "@/lib/wishlist";
 import { products } from "@/data/products";
-import { useCart } from "@/lib/CartContext";
+import { useCart } from "@/context/CartContext";
 import styles from "./wishlist.module.css";
 
 export default function WishlistPage() {
-  const [slugs, setSlugs] = useState<string[]>([]);
-  const [mounted, setMounted] = useState(false);
   const { addItem } = useCart();
+  const [slugs, setSlugs] = useState<string[]>(() => getWishlist());
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setSlugs(getWishlist());
-    setMounted(true);
+    Promise.resolve().then(() => setMounted(true));
   }, []);
 
   const handleRemove = (slug: string) => {
@@ -66,7 +65,19 @@ export default function WishlistPage() {
                   <p className="text-muted">{product.shortDescription}</p>
                   <span className={styles.price}>₹{product.price}</span>
                   <div className={styles.actions}>
-                    <button className={styles.btnCart} onClick={() => addItem(product.id)}>
+                    <button
+                      className={styles.btnCart}
+                      onClick={() =>
+                        addItem({
+                          id: product.id,
+                          name: product.name,
+                          slug: product.slug,
+                          price: product.price,
+                          qty: 1,
+                          image: product.image,
+                        })
+                      }
+                    >
                       Add to Cart
                     </button>
                     <Link href={`/product/${product.slug}`} className={styles.btnBuy}>

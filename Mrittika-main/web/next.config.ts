@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  serverExternalPackages: ["razorpay"],
+  env: {
+    NEXT_PUBLIC_RAZORPAY_KEY_ID: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  },
 };
 
 export default nextConfig;
