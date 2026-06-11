@@ -44,6 +44,13 @@ export async function getOrderByRazorpayOrderId(
   return orders.find((o) => o.razorpayOrderId === razorpayOrderId) ?? null;
 }
 
+export async function getOrderByRazorpayPaymentId(
+  razorpayPaymentId: string
+): Promise<OrderRecord | null> {
+  const orders = readOrders();
+  return orders.find((o) => o.razorpayPaymentId === razorpayPaymentId) ?? null;
+}
+
 export async function updateOrder(
   id: string,
   updates: Partial<OrderRecord>

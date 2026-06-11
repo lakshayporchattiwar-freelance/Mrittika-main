@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { updateOrder, getOrderByRazorpayOrderId } from "@/lib/orderStore";
+import { updateOrder, getOrderByRazorpayOrderId, getAllOrders } from "@/lib/orderStore";
 
 export async function POST(request: Request) {
   try {
@@ -51,6 +51,28 @@ export async function POST(request: Request) {
           await updateOrder(order.id, { status: "Order Confirmed" });
         }
       }
+    } else if (event === "refund.processed") {
+      const refundEntity = body.payload?.refund?.entity;
+      if (refundEntity) {
+        const paymentId = refundEntity.payment_id;
+        const refundId = refundEntity.id;
+        const allOrders = await getAllOrders();
+        const order = allOrders.find((o) => o.razorpayPaymentId === paymentId);
+        if (order && order.cancellation) {
+          await updateOrder(order.id, {
+            cancellation: {
+              ...order.cancellation,
+              status: "Refunded",
+              refundId,
+            },
+          });
+        }
+      }
+    } else if (event === "refund.failed") {
+      const refundEntity = body.payload?.refund?.entity;
+      console.error(
+        `Razorpay refund failed: refund_id=${refundEntity?.id}, payment_id=${refundEntity?.payment_id}`
+      );
     }
 
     return NextResponse.json({ received: true });

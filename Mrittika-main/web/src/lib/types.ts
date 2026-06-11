@@ -19,6 +19,15 @@ export interface CustomerInfo {
   country: string;
 }
 
+export interface CancellationRecord {
+  orderId: string;
+  reason: string;
+  requestedAt: string;
+  status: "Pending" | "Approved" | "Refund Initiated" | "Refunded" | "Rejected";
+  refundId?: string;
+  refundAmount?: number;
+}
+
 export interface OrderRecord {
   id: string;
   razorpayOrderId: string;
@@ -32,6 +41,8 @@ export interface OrderRecord {
   paymentMethod: "Prepaid" | "COD";
   status: string;
   createdAt: string;
+  cancellation?: CancellationRecord;
+  cancelledAt?: string;
 }
 
 export interface TrackingStatus {

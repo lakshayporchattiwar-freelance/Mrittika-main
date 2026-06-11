@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { XCircle } from "lucide-react";
 import type { OrderRecord, TrackingStatus } from "@/lib/types";
 
 const STAGES = [
@@ -50,7 +51,9 @@ function TrackContent() {
       } else {
         const data: OrderRecord = await res.json();
         setOrder(data);
-        if (data.awbNumber) {
+        if (data.status === "Cancelled" || !data.awbNumber) {
+          setTracking(null);
+        } else {
           try {
             const trackRes = await fetch(`/api/shipping/track?awb=${data.awbNumber}`);
             if (trackRes.ok) {
@@ -89,6 +92,8 @@ function TrackContent() {
       setTimeout(() => setCopyMsg(""), 2000);
     });
   };
+
+  const isCancelled = order?.status === "Cancelled";
 
   return (
     <section className="section py-12">
@@ -142,7 +147,7 @@ function TrackContent() {
                 <span className="text-sm text-[var(--color-text-muted)]">Payment</span>
                 <span>{order.paymentMethod}</span>
               </div>
-              {order.awbNumber ? (
+              {!isCancelled && order.awbNumber ? (
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-[var(--color-text-muted)]">AWB</span>
                   <span className="flex items-center gap-2">
@@ -155,73 +160,114 @@ function TrackContent() {
                     </button>
                   </span>
                 </div>
-              ) : (
+              ) : !isCancelled ? (
                 <p className="text-sm text-[var(--color-text-muted)] italic">
                   Your order is confirmed and will be picked up for delivery shortly. AWB not yet assigned.
                 </p>
-              )}
+              ) : null}
             </div>
 
-            <div className="relative pl-8">
-              {STAGES.map((stage, index) => {
-                const isCompleted = index <= currentStage;
-                const isCurrent = index === currentStage;
-                const isLast = index === STAGES.length - 1;
+            {isCancelled && order.cancellation ? (
+              <div className="border-2 border-red-300 rounded-lg p-6 bg-red-50/50">
+                <div className="flex items-center gap-3 mb-4">
+                  <XCircle size={28} className="text-red-500" />
+                  <h2 className="font-display text-xl text-red-700">Order Cancelled</h2>
+                </div>
 
-                return (
-                  <div key={stage} className="relative pb-8 last:pb-0">
-                    {!isLast && (
-                      <div
-                        className={`absolute left-[-24px] top-[28px] w-0.5 h-full ${
-                          index < currentStage ? "bg-green-500" : "bg-gray-200"
-                        }`}
-                      />
-                    )}
-                    <div
-                      className={`absolute left-[-32px] top-[6px] w-5 h-5 rounded-full flex items-center justify-center ${
-                        isCompleted
-                          ? "bg-green-500"
-                          : "bg-gray-200"
-                      } ${isCurrent ? "ring-4 ring-green-500/30 animate-pulse" : ""}`}
-                    >
-                      {isCompleted && !isCurrent && (
-                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-                    <div>
-                      <span
-                        className={`font-medium ${
-                          isCompleted ? "text-green-700" : "text-gray-400"
-                        }`}
-                      >
-                        {stage}
-                      </span>
-                      {isCurrent && (
-                        <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                          Current
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {tracking && tracking.shipmentTrackActivities.length > 0 && (
-              <div className="bg-[var(--color-white-warm)] rounded-lg p-6">
-                <h3 className="font-display text-lg mb-4">Shipment Activity</h3>
-                <div className="space-y-3">
-                  {tracking.shipmentTrackActivities.map((a, i) => (
-                    <div key={i} className="flex gap-4 text-sm border-b border-gray-100 pb-3 last:border-0">
-                      <span className="text-[var(--color-text-muted)] min-w-[100px]">{a.date}</span>
-                      <span className="flex-1">{a.activity}</span>
-                      <span className="text-[var(--color-text-muted)]">{a.location}</span>
-                    </div>
-                  ))}
+                <div className="space-y-2 text-sm">
+                  <p>
+                    <span className="text-[var(--color-text-muted)]">Reason:</span>{" "}
+                    {order.cancellation.reason}
+                  </p>
+                  <p>
+                    <span className="text-[var(--color-text-muted)]">Cancelled on:</span>{" "}
+                    {order.cancelledAt
+                      ? new Date(order.cancelledAt).toLocaleDateString("en-IN", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        })
+                      : "—"}
+                  </p>
+                  {order.cancellation.status === "Refund Initiated" ||
+                  order.cancellation.status === "Refunded" ? (
+                    <span className="inline-block mt-2 text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">
+                      Refund of ₹{order.cancellation.refundAmount ?? order.total} — {order.cancellation.status}
+                    </span>
+                  ) : order.cancellation.status === "Pending" ? (
+                    <p className="mt-2 text-sm text-orange-600">
+                      Refund under review — contact us on WhatsApp:{" "}
+                      <a href="https://wa.me/916000386664" className="underline">
+                        6000386664
+                      </a>
+                    </p>
+                  ) : null}
                 </div>
               </div>
+            ) : (
+              <>
+                <div className="relative pl-8">
+                  {STAGES.map((stage, index) => {
+                    const isCompleted = index <= currentStage;
+                    const isCurrent = index === currentStage;
+                    const isLast = index === STAGES.length - 1;
+
+                    return (
+                      <div key={stage} className="relative pb-8 last:pb-0">
+                        {!isLast && (
+                          <div
+                            className={`absolute left-[-24px] top-[28px] w-0.5 h-full ${
+                              index < currentStage ? "bg-green-500" : "bg-gray-200"
+                            }`}
+                          />
+                        )}
+                        <div
+                          className={`absolute left-[-32px] top-[6px] w-5 h-5 rounded-full flex items-center justify-center ${
+                            isCompleted
+                              ? "bg-green-500"
+                              : "bg-gray-200"
+                          } ${isCurrent ? "ring-4 ring-green-500/30 animate-pulse" : ""}`}
+                        >
+                          {isCompleted && !isCurrent && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <div>
+                          <span
+                            className={`font-medium ${
+                              isCompleted ? "text-green-700" : "text-gray-400"
+                            }`}
+                          >
+                            {stage}
+                          </span>
+                          {isCurrent && (
+                            <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                              Current
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {tracking && tracking.shipmentTrackActivities.length > 0 && (
+                  <div className="bg-[var(--color-white-warm)] rounded-lg p-6">
+                    <h3 className="font-display text-lg mb-4">Shipment Activity</h3>
+                    <div className="space-y-3">
+                      {tracking.shipmentTrackActivities.map((a, i) => (
+                        <div key={i} className="flex gap-4 text-sm border-b border-gray-100 pb-3 last:border-0">
+                          <span className="text-[var(--color-text-muted)] min-w-[100px]">{a.date}</span>
+                          <span className="flex-1">{a.activity}</span>
+                          <span className="text-[var(--color-text-muted)]">{a.location}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             <div className="bg-[var(--color-cream-deep)] rounded-lg p-6">
