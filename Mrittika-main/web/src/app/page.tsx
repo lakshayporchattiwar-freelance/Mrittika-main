@@ -1,214 +1,127 @@
 import Image from "next/image";
 import Link from "next/link";
-import ProductCard from "@/components/ProductCard";
-import TrustStrip from "@/components/TrustStrip";
-import { products } from "@/data/products";
+import ProductGrid from "@/components/ProductGrid";
+import HeroStory from "@/components/HeroStory";
+import VideoTestimonial from "@/components/VideoTestimonial";
+import FloatingLeaves from "@/components/FloatingLeaves";
+import ScrollRevealProvider from "@/components/ScrollRevealProvider";
+import FounderVideo from "@/components/FounderVideo";
 import styles from "./page.module.css";
+
+const valueProps = [
+  {
+    badge: "Botanicals",
+    title: "Wild-Harvested Botanicals",
+    text: "Sourced from trusted farms and forests, every ingredient is hand-selected to nourish Indian skin in every season.",
+    image: "/images/botanicals.webp",
+  },
+  {
+    badge: "Handmade",
+    title: "Made in Small Batches",
+    text: "Each ritual is blended in limited batches for freshness, aroma, and a sensorial experience that feels truly bespoke.",
+    image: "/images/small-batches.webp",
+  },
+  {
+    badge: "Indian Skin",
+    title: "Formulated for Indian Skin",
+    text: "Our rituals are crafted for humidity, heat, and the diverse undertones of Indian skin to keep your glow balanced year-round.",
+    image: "/images/indian-skin.webp",
+  },
+];
 
 export default function HomePage() {
   return (
-    <>
-      <section className={styles.hero}>
-        <div className={`container ${styles.heroGrid}`}>
-          <div className={styles.heroContent}>
-            <span className={styles.microLabel}>Pure Ritual Skincare</span>
-            <h1 className={styles.heroTitle}>
-              Rituals Rooted in
-              <br />
-              the Earth
-            </h1>
-            <p className={styles.heroBody}>
-              Handcrafted in India with botanical ingredients for your unique
-              skin. Soft, indulgent, and trusted by thousands of glowing
-              customers.
-            </p>
-            <div className={styles.heroActions}>
-              <Link href="/shop" className="btn btn-primary btn-lg">
-                Shop Now
-              </Link>
-              <Link href="/about" className="btn btn-ghost btn-lg">
-                Our Story
+    <ScrollRevealProvider>
+      <div className="animate-page-in">
+        <HeroStory />
+
+        <section id="products" className={`section ${styles.featured} ${styles.scrollOffset}`}>
+          <div className="container">
+            <div className={styles.sectionHeading}>
+              <h2>Our Favourites</h2>
+              <p className="text-muted">Bestsellers loved by Indian skin</p>
+            </div>
+            <ProductGrid />
+            <div className={styles.center}>
+              <Link href="/shop" className="btn btn-secondary">
+                View All Products
               </Link>
             </div>
-            <div className={styles.socialProof}>★★★★★ · Loved by 10,000+ customers</div>
           </div>
-          <div className={styles.heroImageWrap}>
-            <Image
-              src="/images/hero-product.svg"
-              alt="Mrittika hero product"
-              width={520}
-              height={680}
-              priority
-              className={styles.heroImage}
-            />
-          </div>
-        </div>
-        <div className={styles.scrollCue}>
-          <span>Discover More</span>
-          <div className={styles.chevron} />
-        </div>
-      </section>
+        </section>
 
-      <TrustStrip />
-
-      <section className={`section ${styles.featured}`}>
-        <div className="container">
-          <div className={styles.sectionHeading}>
-            <h2>Our Favourites</h2>
-            <p className="text-muted">Bestsellers loved by Indian skin</p>
-          </div>
-          <div className={styles.productGrid}>
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-          <div className={styles.center}>
-            <Link href="/shop" className="btn btn-secondary">
-              View All Products
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section className={`section ${styles.benefits}`}>
-        <div className="container">
-          <div className={styles.benefitRow}>
-            <div className={styles.benefitImage} />
-            <div className={styles.benefitText}>
-              <span className="badge">Botanicals</span>
-              <h3>Wild-Harvested Botanicals</h3>
-              <p>
-                Sourced from trusted farms and forests, every ingredient is
-                hand-selected to nourish Indian skin in every season.
-              </p>
-            </div>
-          </div>
-          <div className={styles.benefitRowReverse}>
-            <div className={styles.benefitText}>
-              <span className="badge">Handmade</span>
-              <h3>Made in Small Batches</h3>
-              <p>
-                Each ritual is blended in limited batches for freshness, aroma,
-                and a sensorial experience that feels truly bespoke.
-              </p>
-            </div>
-            <div className={styles.benefitImageAlt} />
-          </div>
-          <div className={styles.benefitRow}>
-            <div className={styles.benefitImageSoft} />
-            <div className={styles.benefitText}>
-              <span className="badge">Indian Skin</span>
-              <h3>Formulated for Indian Skin</h3>
-              <p>
-                Our rituals are crafted for humidity, heat, and the diverse
-                undertones of Indian skin to keep your glow balanced year-round.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className={`section ${styles.testimonials}`}>
-        <div className="container">
-          <div className={styles.sectionHeading}>
-            <h2>Real Results</h2>
-            <p className="text-muted">Unfiltered reviews from real customers</p>
-          </div>
-          <div className={styles.testimonialGrid}>
-            {[
-              {
-                name: "Priya M.",
-                city: "Mumbai",
-                quote:
-                  "My skin feels softer in a week. The glow is real and the fragrance is divine.",
-              },
-              {
-                name: "Ananya R.",
-                city: "Bengaluru",
-                quote:
-                  "The Ubtan mask cleared my dullness without drying. Mrittika feels like a ritual.",
-              },
-              {
-                name: "Kavya S.",
-                city: "Delhi",
-                quote:
-                  "Love the earthy packaging and how the brand feels so personal.",
-              },
-            ].map((testimonial) => (
-              <article key={testimonial.name} className={styles.testimonialCard}>
-                <div className={styles.quoteMark}>“</div>
-                <p>{testimonial.quote}</p>
-                <div className={styles.stars}>★★★★★</div>
-                <div className={styles.reviewMeta}>
-                  <span>{testimonial.name}</span>
-                  <span>· {testimonial.city}</span>
+        <section className={`${styles.valueStrip}`} data-reveal>
+          <div className="container">
+            <div className={styles.stripGrid}>
+              {valueProps.map((prop) => (
+                <div key={prop.badge} className={styles.stripCard}>
+                  <div className={styles.stripImage}>
+                    <Image src={prop.image} alt={prop.title} fill className={styles.stripImg} sizes="(max-width: 768px) 100vw, 33vw" />
+                  </div>
+                  <div className={styles.stripText}>
+                    <span className="badge">{prop.badge}</span>
+                    <h3>{prop.title}</h3>
+                    <p>{prop.text}</p>
+                  </div>
                 </div>
-              </article>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className={`section ${styles.founder}`}>
-        <div className={`container ${styles.founderGrid}`}>
-          <Image
-            src="/images/founder.svg"
-            alt="Founder of Mrittika"
-            width={420}
-            height={520}
-            className={styles.founderImage}
-          />
-          <div className={styles.founderText}>
-            <span className={styles.handwritten}>From the Founder</span>
-            <h2>Why I Started Mrittika</h2>
-            <p>
-              I wanted skincare that felt like a gentle ritual, not a chemical
-              routine. Mrittika was born from my grandmother&apos;s recipes and
-              a promise to keep every ingredient honest, clean, and
-              soul-nourishing.
-            </p>
-            <p>
-              Our mission is to make every woman feel rooted, confident, and
-              luminous—naturally.
-            </p>
-            <span className={styles.signature}>— Charvi Kailas</span>
+        <section id="testimonials" className={`section ${styles.testimonials} ${styles.scrollOffset}`}>
+          <div className="container" style={{ position: "relative" }}>
+            <FloatingLeaves count={8} />
+            <div className={styles.sectionHeading}>
+              <h2>Hear From Our Community</h2>
+              <p className="text-muted">Real stories from real people</p>
+            </div>
+            <div className={styles.videoSingle} data-reveal>
+              <VideoTestimonial
+                videoSrc="/testimonials/testimonial-1.webm"
+              />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className={`section ${styles.instagram}`}>
-        <div className="container">
-          <div className={styles.sectionHeading}>
-            <h2>Follow Our Journey @mrittika</h2>
-            <p className="text-muted">
-              A peek into our rituals, ingredients, and community.
-            </p>
+        <section id="founder" className={`section ${styles.founder} ${styles.scrollOffset}`} data-reveal>
+          <div className={`container ${styles.founderGrid}`}>
+            <FounderVideo />
+            <div className={styles.founderText}>
+              <span className={styles.handwritten}>From the Founder</span>
+              <h2>Why I Started Mrittika</h2>
+              <p>
+                Hi, I&apos;m the founder of Mrittika.
+              </p>
+              <p>
+                Like many people, I struggled to find skincare products that
+                genuinely helped with tanning and dull skin without feeling harsh
+                or overly complicated. I wanted products that were inspired by
+                nature, easy to use, and something I could trust myself.
+              </p>
+              <p>
+                That&apos;s how Mrittika was born.
+              </p>
+              <p>
+                What started as a personal quest soon became a mission to create
+                skincare that helps people feel confident in their own skin. Every
+                product is developed with care, keeping one simple goal in mind: to
+                deliver effective skincare while staying connected to the goodness
+                of natural ingredients.
+              </p>
+              <p>
+                Mrittika isn&apos;t just a brand for me—it&apos;s a journey of
+                learning, creating, and sharing products that I truly believe in.
+              </p>
+              <p>
+                Thank you for trusting us and being a part of this story.
+              </p>
+              <span className={styles.signature}>— Charvi Kailash Khandar</span>
+            </div>
           </div>
-          <div className={styles.instaGrid}>
-            {[1, 2, 3, 4, 5, 6].map((id) => (
-              <div key={id} className={styles.instaCard}>
-                <Image
-                  src={`/images/insta-${id}.svg`}
-                  alt={`Instagram preview ${id}`}
-                  width={260}
-                  height={260}
-                />
-                <div className={styles.instaOverlay}>View on Instagram ↗</div>
-              </div>
-            ))}
-          </div>
-          <div className={styles.center}>
-            <a
-              href="https://instagram.com"
-              className="btn btn-primary"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Follow on Instagram
-            </a>
-          </div>
-        </div>
-      </section>
-    </>
+        </section>
+
+      </div>
+    </ScrollRevealProvider>
   );
 }

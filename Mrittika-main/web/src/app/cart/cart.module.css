@@ -25,6 +25,19 @@
   box-shadow: var(--shadow-sm);
 }
 
+.itemImageWrap {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--color-border-soft);
+}
+
+.itemImage {
+  object-fit: cover;
+}
+
 .itemInfo h3 {
   margin-bottom: var(--space-2);
 }
@@ -87,4 +100,13 @@
   gap: var(--space-2);
   flex-wrap: wrap;
   font-size: var(--text-xs);
+}
+
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-6);
+  padding: var(--space-16) 0;
+  text-align: center;
+  color: var(--color-text-muted);
 }

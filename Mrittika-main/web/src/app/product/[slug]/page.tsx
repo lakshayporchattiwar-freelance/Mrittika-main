@@ -1,15 +1,50 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { products } from "@/data/products";
+import ProductCTA from "@/components/ProductCTA";
+import ProductGallery from "@/components/ProductGallery";
+import ReviewSection from "@/components/ReviewSection";
 import styles from "./product.module.css";
 
 type ProductPageProps = {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 };
 
-export default function ProductPage({ params }: ProductPageProps) {
-  const product = products.find((item) => item.slug === params.slug);
+export async function generateStaticParams() {
+  return products.map((product) => ({ slug: product.slug }));
+}
+
+export async function generateMetadata({
+  params,
+}: ProductPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const product = products.find((item) => item.slug === slug);
+  if (!product) {
+    return { title: "Product Not Found — Mrittika" };
+  }
+  return {
+    title: `${product.name} — Mrittika`,
+    description: product.description ?? product.shortDescription,
+    openGraph: {
+      title: `${product.name} — Mrittika`,
+      description: product.shortDescription,
+      images: [
+        {
+          url: `https://mrittika-main.vercel.app${product.image}`,
+          width: 800,
+          height: 800,
+          alt: product.name,
+        },
+      ],
+    },
+  };
+}
+
+export default async function ProductPage({ params }: ProductPageProps) {
+  const { slug } = await params;
+  const product = products.find((item) => item.slug === slug);
 
   if (!product) {
     notFound();
@@ -24,45 +59,21 @@ export default function ProductPage({ params }: ProductPageProps) {
         </div>
 
         <div className={styles.topGrid}>
-          <div className={styles.gallery}>
-            <div className={styles.mainImage}>
-              <span className="badge">🌿 Natural</span>
-              <Image src={product.image} alt={product.name} width={520} height={620} />
-            </div>
-            <div className={styles.thumbs}>
-              {[1, 2, 3, 4].map((index) => (
-                <button key={index} className={styles.thumb}>
-                  <Image src={product.image} alt={`${product.name} ${index}`} width={90} height={90} />
-                </button>
-              ))}
-            </div>
-          </div>
+          <ProductGallery product={product} />
 
           <div className={styles.details}>
             <div className={styles.badges}>
-              <span className="badge">Oily</span>
-              <span className="badge">Combination</span>
+              <span className="badge">Natural</span>
+              <span className="badge">Handcrafted</span>
             </div>
             <h1>{product.name}</h1>
             <div className={styles.rating}>
-              ★★★★☆ {product.rating.toFixed(1)} · {product.reviewCount} Reviews
+              ★★★★☆ {product.rating.toFixed(1)}
             </div>
             <div className={styles.price}>
-              ₹{product.price} <span>₹{product.mrp}</span>
+              ₹{product.price}
             </div>
-            <div className={styles.variants}>
-              <button className={styles.variant}>100g</button>
-              <button className={styles.variant}>200g</button>
-            </div>
-            <div className={styles.quantity}>
-              <button>-</button>
-              <span>1</span>
-              <button>+</button>
-            </div>
-            <div className={styles.cta}>
-              <button className="btn btn-primary btn-lg">Add to Cart</button>
-              <button className="btn btn-secondary btn-lg">Buy Now</button>
-            </div>
+            <ProductCTA productId={product.id} />
             <div className={styles.trust}>
               <span>Free shipping</span>
               <span>Easy returns</span>
@@ -73,7 +84,7 @@ export default function ProductPage({ params }: ProductPageProps) {
 
         <div className={styles.tabs}>
           <div className={styles.tabHeader}>
-            {["Description", "Ingredients", "Benefits", "How to Use", "Reviews", "FAQ"].map(
+            {["Description", "Ingredients", "How to Use", "Reviews"].map(
               (tab) => (
                 <button key={tab}>{tab}</button>
               )
@@ -82,28 +93,54 @@ export default function ProductPage({ params }: ProductPageProps) {
           <div className={styles.tabContent}>
             <h3>About this ritual</h3>
             <p>
-              A luxurious ritual infused with turmeric, sandalwood, and rose
-              petals to brighten, detoxify, and soften your skin.
+              {product.description ?? product.shortDescription}
             </p>
-            <div className={styles.ingredientChips}>
-              {["Saffron", "Rose Clay", "Neem", "Sandalwood"].map((item) => (
-                <span key={item} className={styles.chip}>
-                  {item}
-                </span>
-              ))}
-            </div>
+
+            {product.ingredients && (
+              <div className={styles.ingredientSection}>
+                <h3>Key Ingredients</h3>
+                <div className={styles.ingredientChips}>
+                  {product.ingredients.map((item) => (
+                    <span key={item} className={styles.chip}>
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {product.howToUse && (
+              <div className={styles.howToUseSection}>
+                <h3>How to Use</h3>
+                <ol className={styles.steps}>
+                  {product.howToUse.map((step, index) => (
+                    <li key={index} className={styles.step}>
+                      <span className={styles.stepNumber}>{index + 1}</span>
+                      <span>{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
+            <ReviewSection productSlug={product.slug} />
           </div>
         </div>
 
         <div className={styles.related}>
           <h2>You Might Also Love</h2>
           <div className={styles.relatedGrid}>
-            {products.map((item) => (
-              <Link key={item.id} href={`/product/${item.slug}`} className={styles.relatedCard}>
-                <Image src={item.image} alt={item.name} width={180} height={200} />
-                <span>{item.name}</span>
-              </Link>
-            ))}
+            {products
+              .filter((item) => item.slug !== product.slug)
+              .slice(0, 3)
+              .map((item) => (
+                <Link key={item.id} href={`/product/${item.slug}`} className={styles.relatedCard}>
+                  <div className={styles.relatedImageWrap}>
+                    <Image src={item.image} alt={item.name} fill className={styles.relatedImage} sizes="(max-width: 768px) 50vw, 180px" loading="lazy" />
+                  </div>
+                  <span>{item.name}</span>
+                </Link>
+              ))}
           </div>
         </div>
       </div>

@@ -8,17 +8,6 @@ export default function Footer() {
         <div className={styles.brand}>
           <h2>Mrittika.</h2>
           <p>Rooted in nature. Refined by ritual.</p>
-          <div className={styles.socials}>
-            <a href="https://instagram.com" target="_blank" rel="noreferrer">
-              Instagram
-            </a>
-            <a href="https://wa.me/917385395360" target="_blank" rel="noreferrer">
-              WhatsApp
-            </a>
-            <a href="https://facebook.com" target="_blank" rel="noreferrer">
-              Facebook
-            </a>
-          </div>
         </div>
 
         <div>
@@ -27,11 +16,13 @@ export default function Footer() {
           <Link href="/shop">Shop</Link>
           <Link href="/about">About</Link>
           <Link href="/contact">Contact</Link>
+          <Link href="/orders">My Orders</Link>
         </div>
 
         <div>
           <h3>Help</h3>
           <Link href="/contact">Contact</Link>
+          <Link href="/track">Track Order</Link>
           <Link href="/policies/shipping">Shipping</Link>
           <Link href="/policies/refund">Refund</Link>
           <Link href="/policies/terms">Terms</Link>

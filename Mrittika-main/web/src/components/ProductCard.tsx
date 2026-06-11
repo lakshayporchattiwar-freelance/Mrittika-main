@@ -1,40 +1,54 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useCart } from "@/lib/CartContext";
+import WishlistButton from "@/components/WishlistButton";
 import styles from "./ProductCard.module.css";
 import type { Product } from "@/data/products";
 
 type ProductCardProps = {
   product: Product;
+  priority?: boolean;
 };
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, priority = false }: ProductCardProps) {
+  const { addItem } = useCart();
+  const [hovered, setHovered] = useState(false);
+
+  const displayImage =
+    hovered && product.images.length > 1
+      ? product.images[1]
+      : product.images[0];
+
   return (
-    <div className={styles.card}>
-      <div className={styles.imageWrap}>
+    <div
+      className={styles.card}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <Link href={`/product/${product.slug}`} className={styles.imageWrap}>
         <Image
-          src={product.image}
+          src={displayImage}
           alt={product.name}
-          width={320}
-          height={360}
+          fill
           className={styles.image}
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          loading={priority ? "eager" : "lazy"}
+          priority={priority}
         />
-        {product.badge && <span className={styles.badge}>{product.badge}</span>}
-      </div>
+        <WishlistButton slug={product.slug} />
+      </Link>
       <div className={styles.body}>
-        <h3>{product.name}</h3>
+        <h3 className={styles.name}>{product.name}</h3>
         <p className={styles.desc}>{product.shortDescription}</p>
-        <div className={styles.rating}>
-          <span>★★★★★</span>
-          <span>{product.rating.toFixed(1)}</span>
-          <span className={styles.muted}>· {product.reviewCount} reviews</span>
-        </div>
-        <div className={styles.priceRow}>
-          <span className={styles.price}>₹{product.price}</span>
-          <span className={styles.mrp}>₹{product.mrp}</span>
-        </div>
+        <span className={styles.price}>₹{product.price}</span>
         <div className={styles.actions}>
-          <button className="btn btn-secondary">Add to Cart</button>
-          <Link href={`/product/${product.slug}`} className="btn btn-primary">
+          <button className={styles.btnCart} onClick={() => addItem(product.id)}>
+            Add to Cart
+          </button>
+          <Link href={`/product/${product.slug}`} className={styles.btnBuy}>
             Buy Now
           </Link>
         </div>

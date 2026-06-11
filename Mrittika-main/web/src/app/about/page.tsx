@@ -20,8 +20,11 @@ export default function AboutPage() {
             { year: "2025", text: "10,000+ rituals delivered across India." },
           ].map((item) => (
             <div key={item.year} className={styles.timelineItem}>
-              <span>{item.year}</span>
-              <p>{item.text}</p>
+              <div className={styles.timelineLine} />
+              <div className={styles.timelineContent}>
+                <span className={styles.timelineYear}>{item.year}</span>
+                <p>{item.text}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -39,14 +42,55 @@ export default function AboutPage() {
           ))}
         </div>
 
-        <div className={styles.team}>
-          <Image src="/images/founder.svg" alt="Founder" width={360} height={420} />
-          <div>
-            <h2>Meet the Founder</h2>
-            <p>
-              Charvi Kailas blends ancestral wisdom with modern formulation
-              standards, ensuring every ritual feels personal and premium.
-            </p>
+        <div className={styles.founder}>
+          <div className={styles.founderMedia}>
+            <Image
+              src="/images/founder.svg"
+              alt="Charvi Kailash Khandar"
+              width={400}
+              height={480}
+              className={styles.founderImage}
+            />
+            <video
+              src="/founder/founder-video.webm"
+              controls
+              className={styles.founderVideo}
+            />
+          </div>
+          <div className={styles.founderBio}>
+            <span className={styles.founderLabel}>Meet the Founder</span>
+            <h2>Charvi Kailash Khandar</h2>
+            <span className={styles.founderTitle}>
+              Founder &amp; Formulator, Mrittika
+            </span>
+            <div className={styles.founderStory}>
+              <p>
+                Hi, I&apos;m the founder of Mrittika.
+              </p>
+              <p>
+                Like many people, I struggled to find skincare products that
+                genuinely helped with tanning and dull skin without feeling harsh
+                or overly complicated. I wanted products that were inspired by
+                nature, easy to use, and something I could trust myself.
+              </p>
+              <p>
+                That&apos;s how Mrittika was born.
+              </p>
+              <p>
+                What started as a personal quest soon became a mission to create
+                skincare that helps people feel confident in their own skin. Every
+                product is developed with care, keeping one simple goal in mind: to
+                deliver effective skincare while staying connected to the goodness
+                of natural ingredients.
+              </p>
+              <p>
+                Mrittika isn&apos;t just a brand for me—it&apos;s a journey of
+                learning, creating, and sharing products that I truly believe in.
+              </p>
+              <p>
+                Thank you for trusting us and being a part of this story.
+              </p>
+            </div>
           </div>
         </div>
       </div>

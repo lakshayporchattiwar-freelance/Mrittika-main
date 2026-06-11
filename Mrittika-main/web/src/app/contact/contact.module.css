@@ -28,6 +28,20 @@
   align-content: start;
 }
 
+.whatsappLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: #25D366;
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+
+.whatsappLink:hover {
+  opacity: 0.8;
+}
+
 .map {
   height: 260px;
   border-radius: var(--radius-lg);

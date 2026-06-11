@@ -9,7 +9,6 @@ type Product = {
   id: string;
   name: string;
   price: number;
-  mrp: number;
 };
 
 export default function AdminPage() {
@@ -125,13 +124,11 @@ export default function AdminPage() {
           <div className={styles.tableRow}>
             <span>Name</span>
             <span>Price</span>
-            <span>MRP</span>
           </div>
           {products.map((product) => (
             <div key={product.id} className={styles.tableRow}>
               <span>{product.name}</span>
               <span>₹{product.price}</span>
-              <span>₹{product.mrp}</span>
             </div>
           ))}
         </div>

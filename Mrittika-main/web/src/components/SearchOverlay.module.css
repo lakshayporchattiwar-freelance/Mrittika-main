@@ -1,0 +1,130 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(59, 46, 36, 0.4);
+  backdrop-filter: blur(6px);
+}
+
+.panel {
+  position: relative;
+  width: min(600px, 90vw);
+  background: rgba(253, 248, 242, 0.95);
+  backdrop-filter: blur(24px);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  overflow: hidden;
+  animation: slideDown 0.25s var(--ease-out);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.searchRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border-soft);
+}
+
+.searchIcon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--color-text-muted);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+.input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  color: var(--color-text-dark);
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.closeBtn {
+  border: none;
+  background: transparent;
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: var(--space-1);
+  transition: color var(--duration-fast);
+}
+
+.closeBtn:hover {
+  color: var(--color-text-dark);
+}
+
+.results {
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-5);
+  transition: background var(--duration-fast);
+}
+
+.result:hover {
+  background: rgba(193, 98, 43, 0.06);
+}
+
+.result > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.resultName {
+  font-weight: 600;
+  color: var(--color-text-dark);
+}
+
+.resultPrice {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.resultDesc {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.empty,
+.hint {
+  padding: var(--space-8) var(--space-5);
+  text-align: center;
+  color: var(--color-text-muted);
+}

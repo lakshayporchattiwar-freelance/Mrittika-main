@@ -3,6 +3,12 @@
   margin-bottom: var(--space-4);
 }
 
+.policy h2 {
+  font-size: var(--text-xl);
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-2);
+}
+
 .content {
   max-width: 760px;
   margin: 0 auto;
@@ -11,5 +17,16 @@
 }
 
 .content p {
+  color: var(--color-text-muted);
+}
+
+.content ul {
+  list-style: disc;
+  padding-left: var(--space-6);
+  display: grid;
+  gap: var(--space-2);
+}
+
+.content li {
   color: var(--color-text-muted);
 }

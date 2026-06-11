@@ -38,8 +38,9 @@ export function generateStaticParams() {
   return Object.keys(policies).map((slug) => ({ slug }));
 }
 
-export default function PolicyPage({ params }: { params: { slug: string } }) {
-  const policy = policies[params.slug as PolicySlug];
+export default async function PolicyPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const policy = policies[slug as PolicySlug];
 
   if (!policy) {
     notFound();
