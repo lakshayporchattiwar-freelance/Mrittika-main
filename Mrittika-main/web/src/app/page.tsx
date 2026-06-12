@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import ProductGrid from "@/components/ProductGrid";
-import HeroStory from "@/components/HeroStory";
+import { HeroFramePlayer } from "@/components/HeroFramePlayer";
 import VideoTestimonial from "@/components/VideoTestimonial";
 import FloatingLeaves from "@/components/FloatingLeaves";
 import ScrollRevealProvider from "@/components/ScrollRevealProvider";
@@ -33,7 +33,7 @@ export default function HomePage() {
   return (
     <ScrollRevealProvider>
       <div className="animate-page-in">
-        <HeroStory />
+        <HeroFramePlayer />
 
         <section id="products" className={`section ${styles.featured} ${styles.scrollOffset}`}>
           <div className="container">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState, useEffect } from "react";
 import styles from "./FloatingLeaves.module.css";
 
 interface Leaf {
@@ -23,23 +23,29 @@ const COLORS = [
   "#b8a361",
 ];
 
+function generateLeaves(count: number): Leaf[] {
+  const arr: Leaf[] = [];
+  for (let i = 0; i < count; i++) {
+    arr.push({
+      id: i,
+      x: Math.random() * 100,
+      duration: 8 + Math.random() * 12,
+      delay: Math.random() * 10,
+      sway: 15 + Math.random() * 25,
+      rotation: Math.random() * 360,
+      opacity: 0.3 + Math.random() * 0.3,
+      size: 16 + Math.random() * 20,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    });
+  }
+  return arr;
+}
+
 export default function FloatingLeaves({ count = 10 }: { count?: number }) {
-  const leaves = useMemo<Leaf[]>(() => {
-    const arr: Leaf[] = [];
-    for (let i = 0; i < count; i++) {
-      arr.push({
-        id: i,
-        x: Math.random() * 100,
-        duration: 8 + Math.random() * 12,
-        delay: Math.random() * 10,
-        sway: 15 + Math.random() * 25,
-        rotation: Math.random() * 360,
-        opacity: 0.3 + Math.random() * 0.3,
-        size: 16 + Math.random() * 20,
-        color: COLORS[Math.floor(Math.random() * COLORS.length)],
-      });
-    }
-    return arr;
+  const [leaves, setLeaves] = useState<Leaf[]>([]);
+
+  useEffect(() => {
+    setLeaves(generateLeaves(count));
   }, [count]);
 
   return (

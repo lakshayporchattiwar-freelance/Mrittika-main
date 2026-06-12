@@ -24,7 +24,7 @@ const CANCEL_REASONS = [
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<OrderRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const [cancelModal, setCancelModal] = useState<OrderRecord | null>(null);
   const [cancelReason, setCancelReason] = useState("");
   const [customReason, setCustomReason] = useState("");
@@ -33,45 +33,41 @@ export default function OrdersPage() {
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchOrders() {
-      let localOrders: OrderRecord[] = [];
-      try {
-        const stored = localStorage.getItem("mrittika_orders");
-        if (stored) localOrders = JSON.parse(stored);
-      } catch {
-        // ignore
-      }
-
-      let serverOrders: OrderRecord[] = [];
-      try {
-        const res = await fetch("/api/orders/list");
-        if (res.ok) {
-          const data = await res.json();
-          serverOrders = data.orders ?? [];
-        }
-      } catch {
-        // ignore
-      }
-
-      const merged = new Map<string, OrderRecord>();
-      for (const o of [...localOrders, ...serverOrders]) {
-        if (!merged.has(o.id)) {
-          merged.set(o.id, o);
-        } else {
-          const existing = merged.get(o.id)!;
-          merged.set(o.id, { ...existing, ...o });
-        }
-      }
-
-      const sorted = Array.from(merged.values()).sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-
-      setOrders(sorted);
-      setLoading(false);
+    let localOrders: OrderRecord[] = [];
+    try {
+      const stored = localStorage.getItem("mrittika_orders");
+      if (stored) localOrders = JSON.parse(stored);
+    } catch {
+      // ignore
     }
 
-    fetchOrders();
+    const merged = new Map<string, OrderRecord>();
+    for (const o of localOrders) {
+      merged.set(o.id, o);
+    }
+    setOrders(Array.from(merged.values()));
+    setMounted(true);
+
+    fetch("/api/orders/list")
+      .then((res) => {
+        if (res.ok) return res.json();
+        throw new Error("fetch failed");
+      })
+      .then((data) => {
+        const serverOrders: OrderRecord[] = data.orders ?? [];
+        const merged2 = new Map<string, OrderRecord>();
+        for (const o of [...localOrders, ...serverOrders]) {
+          if (!merged2.has(o.id)) merged2.set(o.id, o);
+          else merged2.set(o.id, { ...merged2.get(o.id)!, ...o });
+        }
+        const sorted = Array.from(merged2.values()).sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setOrders(sorted);
+      })
+      .catch(() => {
+        // server fetch failed — local orders already shown
+      });
   }, []);
 
   const openCancelModal = (order: OrderRecord) => {
@@ -136,11 +132,12 @@ export default function OrdersPage() {
     }
   }, [toast]);
 
-  if (loading) {
+  if (!mounted) {
     return (
       <section className="section py-12">
         <div className="container text-center">
           <h1 className="font-display text-3xl mb-4">My Orders</h1>
+          <Package size={48} className="mx-auto text-gray-300 mb-4" />
           <p className="text-[var(--color-text-muted)]">Loading orders...</p>
         </div>
       </section>

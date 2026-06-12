@@ -1,14 +1,36 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import styles from "./cart.module.css";
 
 export default function CartPage() {
-  const { items, removeItem, updateQty, total } = useCart();
+  const { items, removeItem, updateQty, total, mounted } = useCart();
+  const router = useRouter();
+  const [checkingOut, setCheckingOut] = useState(false);
   const shipping = total >= 499 ? 0 : 49;
   const grandTotal = total + shipping;
+
+  if (!mounted) {
+    return (
+      <section className={`section ${styles.cart}`}>
+        <div className="container">
+          <h1>Your Cart</h1>
+          <div className={styles.empty}>
+            <p>Loading your cart…</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const handleCheckout = () => {
+    setCheckingOut(true);
+    router.push("/checkout");
+  };
 
   return (
     <section className={`section ${styles.cart}`}>
@@ -62,9 +84,13 @@ export default function CartPage() {
                 <input className="input" placeholder="Coupon code" />
                 <button className="btn btn-ghost">Apply</button>
               </div>
-              <Link href="/checkout" className="btn btn-primary btn-lg">
-                Proceed to Checkout
-              </Link>
+              <button
+                className="btn btn-primary btn-lg"
+                onClick={handleCheckout}
+                disabled={checkingOut}
+              >
+                {checkingOut ? "Processing..." : "Proceed to Checkout"}
+              </button>
               <div className={styles.payments}>
                 <span>Razorpay</span>
                 <span>UPI</span>

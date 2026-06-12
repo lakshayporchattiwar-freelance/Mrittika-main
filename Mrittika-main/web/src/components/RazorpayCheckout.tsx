@@ -122,10 +122,36 @@ export default function RazorpayCheckout({
       <button
         onClick={handlePayment}
         disabled={loading}
-        className="w-full py-4 rounded-lg bg-[#8B4513] text-white font-semibold text-lg hover:bg-[#6d3510] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        style={{
+          width: '100%',
+          padding: '0.875rem',
+          border: 'none',
+          borderRadius: '0.625rem',
+          background: loading ? 'var(--color-primary-light)' : 'var(--color-primary)',
+          color: 'white',
+          fontFamily: 'var(--font-body)',
+          fontSize: '1rem',
+          fontWeight: 600,
+          cursor: loading ? 'not-allowed' : 'pointer',
+          transition: 'background 0.2s ease, transform 0.1s ease',
+          marginTop: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.5rem',
+          letterSpacing: '0.02em',
+        }}
       >
-        {loading ? "Processing..." : `Pay ₹${total}`}
+        {loading ? (
+          <>
+            <span style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.6s linear infinite', display: 'inline-block' }} />
+            Processing...
+          </>
+        ) : (
+          `Pay ₹${total}`
+        )}
       </button>
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </>
   );
 }

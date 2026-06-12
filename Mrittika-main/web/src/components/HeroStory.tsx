@@ -1,121 +1,135 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import FloatingLeaves from "@/components/FloatingLeaves";
+import { HERO_FRAME_CONFIG, getFramePath, getFrameInterval } from "@/lib/heroFrameConfig";
 import styles from "./HeroStory.module.css";
 
-const TOTAL_FRAMES = 299;
-const FPS = 24;
-const FRAME_INTERVAL = 1000 / FPS;
-const PRELOAD_WINDOW = 30;
-
-function pad(n: number) {
-  return String(n).padStart(4, "0");
-}
-
-function frameSrc(n: number) {
-  return `/frames/webp_frame_${pad(n)}.webp`;
-}
+const TOTAL = HERO_FRAME_CONFIG.pcTotalFrames;
+const INTERVAL = getFrameInterval();
+const PRELOAD_AHEAD = HERO_FRAME_CONFIG.preloadBatchSize;
 
 export default function HeroStory() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imagesRef = useRef<Map<number, HTMLImageElement>>(new Map());
-  const currentRef = useRef(1);
-  const rafRef = useRef(0);
-  const lastTickRef = useRef(0);
-  const resizeRef = useRef(0);
-
-  const handleResize = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = canvas.clientWidth * dpr;
-    canvas.height = canvas.clientHeight * dpr;
-    const img = imagesRef.current.get(currentRef.current);
-    if (img && img.complete && img.naturalWidth > 0) {
-      const ctx = canvas.getContext("2d");
-      if (ctx) ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    }
-  }, []);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const initRef = useRef(false);
 
   useEffect(() => {
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [handleResize]);
+    if (initRef.current) return;
+    initRef.current = true;
 
-  const preloadBatch = useCallback((from: number, count: number) => {
-    for (let i = 0; i < count; i++) {
-      const n = ((from + i - 1) % TOTAL_FRAMES) + 1;
-      if (imagesRef.current.has(n)) continue;
-      const img = new Image();
-      img.decoding = "async";
-      img.src = frameSrc(n);
-      imagesRef.current.set(n, img);
+    const img = imgRef.current;
+    if (!img) return;
+
+    const isMobile = window.innerWidth <= 768;
+    const cache = new Map<number, HTMLImageElement>();
+    let mounted = true;
+    let rafId = 0;
+    let lastTick = 0;
+    let currentFrame = 0;
+
+    function getOrLoad(n: number): HTMLImageElement {
+      const existing = cache.get(n);
+      if (existing) return existing;
+      const i = new Image();
+      i.decoding = "async";
+      i.src = getFramePath(n, isMobile);
+      cache.set(n, i);
+      return i;
     }
-  }, []);
 
-  useEffect(() => {
-    preloadBatch(1, PRELOAD_WINDOW);
-    for (let batch = 30; batch <= TOTAL_FRAMES; batch += 30) {
-      setTimeout(() => preloadBatch(batch, PRELOAD_WINDOW), 100);
+    function isLoaded(n: number): boolean {
+      const i = cache.get(n);
+      return !!i && i.complete && i.naturalWidth > 0;
     }
-  }, [preloadBatch]);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    function preloadRange(from: number, count: number) {
+      for (let i = 0; i < count; i++) {
+        const n = ((from + i - 1) % TOTAL) + 1;
+        getOrLoad(n);
+      }
+    }
 
-    const draw = (now: number) => {
-      if (now - lastTickRef.current >= FRAME_INTERVAL) {
-        lastTickRef.current = now;
-        const next = currentRef.current >= TOTAL_FRAMES ? 1 : currentRef.current + 1;
-        currentRef.current = next;
+    function advance(n: number) {
+      currentFrame = n;
+      img!.src = getFramePath(n, isMobile);
+    }
 
-        const img = imagesRef.current.get(next);
-        if (img && img.complete && img.naturalWidth > 0) {
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          preloadBatch(next + 1, 5);
+    preloadRange(1, PRELOAD_AHEAD);
+
+    let batchTimer: ReturnType<typeof setTimeout> | null = null;
+    function scheduleBatches() {
+      let batch = PRELOAD_AHEAD + 1;
+      function doBatch() {
+        if (!mounted || batch > TOTAL) return;
+        preloadRange(batch, PRELOAD_AHEAD);
+        batch += PRELOAD_AHEAD;
+        batchTimer = setTimeout(doBatch, 300);
+      }
+      batchTimer = setTimeout(doBatch, 150);
+    }
+    scheduleBatches();
+
+    const first = getOrLoad(1);
+
+    function startLoop() {
+      if (!mounted) return;
+      advance(1);
+
+      function tick(now: number) {
+        if (!mounted) return;
+
+        if (now - lastTick >= INTERVAL) {
+          lastTick = now;
+          const next = currentFrame >= TOTAL ? 1 : currentFrame + 1;
+
+          if (isLoaded(next)) {
+            advance(next);
+          }
+
+          if (next % 8 === 0) {
+            preloadRange(next + 1, PRELOAD_AHEAD);
+          }
         }
-      }
-      rafRef.current = requestAnimationFrame(draw);
-    };
 
-    const drawFirst = () => {
-      const img = imagesRef.current.get(1);
-      if (img && img.complete && img.naturalWidth > 0) {
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        rafId = requestAnimationFrame(tick);
       }
-    };
 
-    const firstImg = imagesRef.current.get(1);
-    if (firstImg && firstImg.complete) {
-      drawFirst();
-    } else if (firstImg) {
-      firstImg.addEventListener("load", drawFirst, { once: true });
+      rafId = requestAnimationFrame(tick);
     }
 
-    rafRef.current = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [preloadBatch]);
+    if (first.complete && first.naturalWidth > 0) {
+      startLoop();
+    } else {
+      first.addEventListener("load", () => {
+        if (mounted) startLoop();
+      }, { once: true });
+    }
+
+    return () => {
+      mounted = false;
+      cancelAnimationFrame(rafId);
+      if (batchTimer) clearTimeout(batchTimer);
+    };
+  }, []);
 
   return (
     <section className={styles.hero}>
       <div className={styles.frameWrap}>
-        <canvas ref={canvasRef} className={styles.canvas} />
+        <img ref={imgRef} alt="" className={styles.frameImg} aria-hidden="true" />
         <div className={styles.overlay} />
         <FloatingLeaves count={10} />
-        <span className={styles.logo}>Mrittika.</span>
-        <div className={styles.ctas}>
-          <Link href="/shop" className="btn btn-primary btn-lg">
-            Shop Now
-          </Link>
-          <Link href="/about" className="btn btn-primary btn-lg">
-            Our Story
-          </Link>
+        <div className={styles.heroContent}>
+          <h1 className={styles.heading}>Mrittika</h1>
+          <p className={styles.tagline}>Natural Skincare Handcrafted for Indian Skin</p>
+          <div className={styles.ctas}>
+            <Link href="/shop" className="btn btn-primary btn-lg">
+              Shop Now
+            </Link>
+            <Link href="/about" className="btn btn-ghost btn-lg">
+              Our Story
+            </Link>
+          </div>
         </div>
       </div>
       <div className={styles.scrollCue}>

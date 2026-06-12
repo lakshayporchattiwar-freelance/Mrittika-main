@@ -4,15 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import RazorpayCheckout from "@/components/RazorpayCheckout";
-import { ChevronDown } from "lucide-react";
 import type { CustomerInfo } from "@/lib/types";
-
-const CITIES = [
-  "Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai",
-  "Kolkata", "Pune", "Ahmedabad", "Jaipur", "Lucknow",
-  "Nagpur", "Indore", "Bhopal", "Patna", "Chandigarh",
-  "Kochi", "Guwahati", "Bhubaneswar", "Dehradun", "Noida",
-];
+import styles from "./checkout.module.css";
 
 const STATES = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
@@ -26,23 +19,13 @@ const STATES = [
   "Lakshadweep", "Puducherry",
 ];
 
-type PaymentMethod = "upi" | "gpay" | "cod" | "upi_id";
-
-function SelectChevron({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="relative">
-      {children}
-      <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-muted)]" />
-    </div>
-  );
-}
+type PaymentMethod = "upi" | "cod";
 
 export default function CheckoutPage() {
   const { items, total: cartTotal, count } = useCart();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("upi");
-  const [upiId, setUpiId] = useState("");
   const [codLoading, setCodLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,7 +60,7 @@ export default function CheckoutPage() {
     if (!customerInfo.phone.trim() || !/^[6-9]\d{9}$/.test(customerInfo.phone.replace(/\s/g, "")))
       e.phone = "10-digit phone required";
     if (!customerInfo.address.trim()) e.address = "Required";
-    if (!customerInfo.city) e.city = "Required";
+    if (!customerInfo.city.trim()) e.city = "Required";
     if (!customerInfo.state) e.state = "Required";
     if (!customerInfo.pincode.trim() || !/^\d{6}$/.test(customerInfo.pincode))
       e.pincode = "6-digit pincode required";
@@ -135,214 +118,231 @@ export default function CheckoutPage() {
     }
   };
 
-  return (
-    <section className="section py-12">
-      <div className="container max-w-4xl">
-        <h1 className="font-display text-3xl mb-8">Checkout</h1>
+  const steps = ["Shipping", "Payment", "Confirm"];
 
-        <div className="flex items-center gap-4 mb-10">
-          {["Address", "Payment", "Confirm"].map((label, i) => (
-            <div key={label} className="flex items-center gap-3">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                  currentStep > i + 1
-                    ? "bg-green-600 text-white"
-                    : currentStep === i + 1
-                    ? "bg-[#8B4513] text-white"
-                    : "bg-gray-200 text-gray-500"
-                }`}
-              >
-                {currentStep > i + 1 ? "✓" : i + 1}
+  return (
+    <section className={styles.page}>
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <h1 className={styles.title}>Checkout</h1>
+          <div className={styles.stepper}>
+            {steps.map((label, i) => (
+              <div key={label} className={styles.stepWrap}>
+                <div className={styles.stepItem}>
+                  <div
+                    className={`${styles.stepCircle} ${
+                      currentStep > i + 1
+                        ? styles.stepDone
+                        : currentStep === i + 1
+                        ? styles.stepActive
+                        : styles.stepPending
+                    }`}
+                  >
+                    {currentStep > i + 1 ? (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    ) : (
+                      i + 1
+                    )}
+                  </div>
+                  <span
+                    className={`${styles.stepLabel} ${
+                      currentStep === i + 1 ? styles.stepLabelActive : ""
+                    }`}
+                  >
+                    {label}
+                  </span>
+                </div>
+                {i < 2 && (
+                  <div
+                    className={`${styles.stepLine} ${
+                      currentStep > i + 1 ? styles.stepLineDone : ""
+                    }`}
+                  />
+                )}
               </div>
-              <span
-                className={`text-sm font-medium ${
-                  currentStep === i + 1 ? "text-[#8B4513]" : "text-gray-400"
-                }`}
-              >
-                {label}
-              </span>
-              {i < 2 && <div className="w-12 h-px bg-gray-300" />}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
-          <div className="lg:col-span-3">
+        <div className={styles.grid}>
+          <div className={styles.main}>
             {currentStep === 1 && (
-              <form onSubmit={handleStep1Submit} className="space-y-4">
-                <h2 className="font-display text-xl mb-4">Shipping Address</h2>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
+              <form onSubmit={handleStep1Submit} className={styles.card}>
+                <h2 className={styles.sectionTitle}>Shipping Address</h2>
+                <div className={styles.formGrid}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>First Name *</label>
                     <input
-                      className="input w-full"
-                      placeholder="First Name *"
+                      className={`${styles.input} ${fieldErrors.firstName ? styles.inputError : ""}`}
+                      placeholder="Enter first name"
                       value={customerInfo.firstName}
                       onChange={(e) => updateField("firstName", e.target.value)}
                     />
-                    {fieldErrors.firstName && (
-                      <span className="text-xs text-red-600">{fieldErrors.firstName}</span>
-                    )}
+                    {fieldErrors.firstName && <span className={styles.error}>{fieldErrors.firstName}</span>}
                   </div>
-                  <div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Last Name *</label>
                     <input
-                      className="input w-full"
-                      placeholder="Last Name *"
+                      className={`${styles.input} ${fieldErrors.lastName ? styles.inputError : ""}`}
+                      placeholder="Enter last name"
                       value={customerInfo.lastName}
                       onChange={(e) => updateField("lastName", e.target.value)}
                     />
-                    {fieldErrors.lastName && (
-                      <span className="text-xs text-red-600">{fieldErrors.lastName}</span>
-                    )}
+                    {fieldErrors.lastName && <span className={styles.error}>{fieldErrors.lastName}</span>}
                   </div>
-                </div>
-                <div>
-                  <input
-                    className="input w-full"
-                    type="email"
-                    placeholder="Email *"
-                    value={customerInfo.email}
-                    onChange={(e) => updateField("email", e.target.value)}
-                  />
-                  {fieldErrors.email && (
-                    <span className="text-xs text-red-600">{fieldErrors.email}</span>
-                  )}
-                </div>
-                <div>
-                  <input
-                    className="input w-full"
-                    type="tel"
-                    placeholder="Phone (10 digits) *"
-                    value={customerInfo.phone}
-                    onChange={(e) => updateField("phone", e.target.value)}
-                  />
-                  {fieldErrors.phone && (
-                    <span className="text-xs text-red-600">{fieldErrors.phone}</span>
-                  )}
-                </div>
-                <div>
-                  <input
-                    className="input w-full"
-                    placeholder="Address *"
-                    value={customerInfo.address}
-                    onChange={(e) => updateField("address", e.target.value)}
-                  />
-                  {fieldErrors.address && (
-                    <span className="text-xs text-red-600">{fieldErrors.address}</span>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <SelectChevron>
-                      <select
-                        className="input w-full appearance-none pr-8"
-                        value={customerInfo.city}
-                        onChange={(e) => updateField("city", e.target.value)}
-                      >
-                        <option value="">Select City *</option>
-                        {CITIES.map((c) => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </select>
-                    </SelectChevron>
-                    {fieldErrors.city && (
-                      <span className="text-xs text-red-600">{fieldErrors.city}</span>
-                    )}
-                  </div>
-                  <div>
-                    <SelectChevron>
-                      <select
-                        className="input w-full appearance-none pr-8"
-                        value={customerInfo.state}
-                        onChange={(e) => updateField("state", e.target.value)}
-                      >
-                        <option value="">Select State *</option>
-                        {STATES.map((s) => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </select>
-                    </SelectChevron>
-                    {fieldErrors.state && (
-                      <span className="text-xs text-red-600">{fieldErrors.state}</span>
-                    )}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Email *</label>
                     <input
-                      className="input w-full"
-                      placeholder="Pincode (6 digits) *"
+                      className={`${styles.input} ${fieldErrors.email ? styles.inputError : ""}`}
+                      type="email"
+                      placeholder="you@example.com"
+                      value={customerInfo.email}
+                      onChange={(e) => updateField("email", e.target.value)}
+                    />
+                    {fieldErrors.email && <span className={styles.error}>{fieldErrors.email}</span>}
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Phone *</label>
+                    <input
+                      className={`${styles.input} ${fieldErrors.phone ? styles.inputError : ""}`}
+                      type="tel"
+                      placeholder="10-digit mobile number"
+                      value={customerInfo.phone}
+                      onChange={(e) => updateField("phone", e.target.value)}
+                    />
+                    {fieldErrors.phone && <span className={styles.error}>{fieldErrors.phone}</span>}
+                  </div>
+                  <div className={`${styles.field} ${styles.fieldFull}`}>
+                    <label className={styles.label}>Address *</label>
+                    <input
+                      className={`${styles.input} ${fieldErrors.address ? styles.inputError : ""}`}
+                      placeholder="House no., street, locality"
+                      value={customerInfo.address}
+                      onChange={(e) => updateField("address", e.target.value)}
+                    />
+                    {fieldErrors.address && <span className={styles.error}>{fieldErrors.address}</span>}
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>City *</label>
+                    <input
+                      className={`${styles.input} ${fieldErrors.city ? styles.inputError : ""}`}
+                      placeholder="Enter city"
+                      value={customerInfo.city}
+                      onChange={(e) => updateField("city", e.target.value)}
+                    />
+                    {fieldErrors.city && <span className={styles.error}>{fieldErrors.city}</span>}
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>State *</label>
+                    <select
+                      className={`${styles.input} ${fieldErrors.state ? styles.inputError : ""}`}
+                      value={customerInfo.state}
+                      onChange={(e) => updateField("state", e.target.value)}
+                    >
+                      <option value="">Select state</option>
+                      {STATES.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                    {fieldErrors.state && <span className={styles.error}>{fieldErrors.state}</span>}
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>PIN Code *</label>
+                    <input
+                      className={`${styles.input} ${fieldErrors.pincode ? styles.inputError : ""}`}
+                      placeholder="6-digit pincode"
                       value={customerInfo.pincode}
                       onChange={(e) => updateField("pincode", e.target.value)}
                     />
-                    {fieldErrors.pincode && (
-                      <span className="text-xs text-red-600">{fieldErrors.pincode}</span>
-                    )}
+                    {fieldErrors.pincode && <span className={styles.error}>{fieldErrors.pincode}</span>}
                   </div>
-                  <input
-                    className="input w-full bg-gray-50"
-                    value="India"
-                    disabled
-                  />
+                  <div className={styles.field}>
+                    <label className={styles.label}>Country</label>
+                    <input className={styles.input} value="India" readOnly />
+                  </div>
                 </div>
-                <button type="submit" className="btn btn-primary btn-lg w-full mt-4">
+                <button type="submit" className={styles.primaryBtn}>
                   Continue to Payment
                 </button>
               </form>
             )}
 
             {currentStep === 2 && (
-              <div className="space-y-4">
-                <h2 className="font-display text-xl mb-4">Payment Method</h2>
+              <div className={styles.card}>
+                <h2 className={styles.sectionTitle}>Payment Method</h2>
 
-                {([
-                  { id: "upi" as PaymentMethod, label: "UPI / Online Payment", desc: "Pay via UPI, cards, or netbanking" },
-                  { id: "gpay" as PaymentMethod, label: "Google Pay", desc: "Pay using GPay UPI" },
-                  { id: "cod" as PaymentMethod, label: "Cash on Delivery", desc: "₹49 COD charge applies" },
-                  { id: "upi_id" as PaymentMethod, label: "Pay with any UPI ID", desc: "Enter your UPI ID" },
-                ]).map((opt) => (
+                <div className={styles.paymentOptions}>
                   <label
-                    key={opt.id}
-                    className={`block border-2 rounded-lg p-4 cursor-pointer transition-colors ${
-                      paymentMethod === opt.id
-                        ? "border-[#8B4513] bg-[#fdf8f2]"
-                        : "border-gray-200 hover:border-gray-300"
+                    className={`${styles.paymentOption} ${
+                      paymentMethod === "upi" ? styles.paymentOptionActive : ""
                     }`}
                   >
-                    <div className="flex items-start gap-3">
+                    <div className={styles.paymentRadio}>
                       <input
                         type="radio"
                         name="payment"
-                        checked={paymentMethod === opt.id}
-                        onChange={() => setPaymentMethod(opt.id)}
-                        className="mt-1"
+                        checked={paymentMethod === "upi"}
+                        onChange={() => setPaymentMethod("upi")}
                       />
+                      <span className={styles.radioCustom} />
+                    </div>
+                    <div className={styles.paymentInfo}>
+                      <div className={styles.paymentIcon}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B4513" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                          <line x1="1" y1="10" x2="23" y2="10" />
+                        </svg>
+                      </div>
                       <div>
-                        <span className="font-semibold">{opt.label}</span>
-                        <p className="text-sm text-[var(--color-text-muted)]">{opt.desc}</p>
+                        <span className={styles.paymentLabel}>Pay Online</span>
+                        <p className={styles.paymentDesc}>UPI, Cards, Netbanking via Razorpay</p>
                       </div>
                     </div>
+                    <span className={styles.paymentBadge}>Secure</span>
                   </label>
-                ))}
 
-                {paymentMethod === "upi_id" && (
-                  <input
-                    className="input w-full mt-2"
-                    placeholder="Enter UPI ID (e.g. name@upi)"
-                    value={upiId}
-                    onChange={(e) => setUpiId(e.target.value)}
-                  />
-                )}
+                  <label
+                    className={`${styles.paymentOption} ${
+                      paymentMethod === "cod" ? styles.paymentOptionActive : ""
+                    }`}
+                  >
+                    <div className={styles.paymentRadio}>
+                      <input
+                        type="radio"
+                        name="payment"
+                        checked={paymentMethod === "cod"}
+                        onChange={() => setPaymentMethod("cod")}
+                      />
+                      <span className={styles.radioCustom} />
+                    </div>
+                    <div className={styles.paymentInfo}>
+                      <div className={styles.paymentIcon}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B4513" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="12" y1="1" x2="12" y2="23" />
+                          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                        </svg>
+                      </div>
+                      <div>
+                        <span className={styles.paymentLabel}>Cash on Delivery</span>
+                        <p className={styles.paymentDesc}>Pay when you receive your order</p>
+                      </div>
+                    </div>
+                    <span className={styles.paymentBadgeCod}>+₹49</span>
+                  </label>
+                </div>
 
                 {error && (
-                  <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg">{error}</div>
+                  <div className={styles.errorBanner}>{error}</div>
                 )}
 
-                <div className="pt-4">
+                <div className={styles.btnRow}>
                   {paymentMethod === "cod" ? (
                     <button
                       onClick={handleCODOrder}
                       disabled={codLoading}
-                      className="w-full py-4 rounded-lg bg-[#8B4513] text-white font-semibold text-lg hover:bg-[#6d3510] transition-colors disabled:opacity-60"
+                      className={styles.primaryBtn}
                     >
                       {codLoading ? "Placing Order..." : `Place COD Order — ₹${grandTotal}`}
                     </button>
@@ -352,7 +352,7 @@ export default function CheckoutPage() {
                         setError(null);
                         setCurrentStep(3);
                       }}
-                      className="w-full py-4 rounded-lg bg-[#8B4513] text-white font-semibold text-lg hover:bg-[#6d3510] transition-colors"
+                      className={styles.primaryBtn}
                     >
                       Proceed to Pay ₹{grandTotal}
                     </button>
@@ -361,21 +361,43 @@ export default function CheckoutPage() {
 
                 <button
                   onClick={() => setCurrentStep(1)}
-                  className="text-sm text-[var(--color-text-muted)] hover:text-[#8B4513]"
+                  className={styles.backBtn}
                 >
-                  ← Back to Address
+                  ← Back to Shipping
                 </button>
               </div>
             )}
 
             {currentStep === 3 && (
-              <div className="space-y-6">
-                <h2 className="font-display text-xl mb-4">Confirm & Pay</h2>
-                <div className="bg-[var(--color-white-warm)] rounded-lg p-6 space-y-3">
-                  <p><strong>Name:</strong> {customerInfo.firstName} {customerInfo.lastName}</p>
-                  <p><strong>Address:</strong> {customerInfo.address}, {customerInfo.city}, {customerInfo.state} — {customerInfo.pincode}</p>
-                  <p><strong>Phone:</strong> {customerInfo.phone}</p>
-                  <p><strong>Email:</strong> {customerInfo.email}</p>
+              <div className={styles.card}>
+                <h2 className={styles.sectionTitle}>Confirm & Pay</h2>
+
+                <div className={styles.confirmBlock}>
+                  <div className={styles.confirmRow}>
+                    <span className={styles.confirmLabel}>Name</span>
+                    <span className={styles.confirmValue}>{customerInfo.firstName} {customerInfo.lastName}</span>
+                  </div>
+                  <div className={styles.confirmRow}>
+                    <span className={styles.confirmLabel}>Address</span>
+                    <span className={styles.confirmValue}>{customerInfo.address}, {customerInfo.city}, {customerInfo.state} — {customerInfo.pincode}</span>
+                  </div>
+                  <div className={styles.confirmRow}>
+                    <span className={styles.confirmLabel}>Phone</span>
+                    <span className={styles.confirmValue}>6000386664</span>
+                  </div>
+                  <div className={styles.confirmRow}>
+                    <span className={styles.confirmLabel}>Email</span>
+                    <span className={styles.confirmValue}>mrittikaskinrituals@gmail.com</span>
+                  </div>
+                </div>
+
+                <div className={styles.confirmNote}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8B4513" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="16" x2="12" y2="12" />
+                    <line x1="12" y1="8" x2="12.01" y2="8" />
+                  </svg>
+                  <span>For order queries, contact us at <strong>6000386664</strong> or <strong>mrittikaskinrituals@gmail.com</strong></span>
                 </div>
 
                 <RazorpayCheckout
@@ -387,7 +409,7 @@ export default function CheckoutPage() {
 
                 <button
                   onClick={() => setCurrentStep(2)}
-                  className="text-sm text-[var(--color-text-muted)] hover:text-[#8B4513]"
+                  className={styles.backBtn}
                 >
                   ← Back to Payment
                 </button>
@@ -395,41 +417,75 @@ export default function CheckoutPage() {
             )}
           </div>
 
-          <div className="lg:col-span-2">
-            <div className="bg-[var(--color-cream-deep)] rounded-lg p-6 space-y-4 sticky top-24">
-              <h3 className="font-display text-lg">Order Summary</h3>
-              {items.map((item) => (
-                <div key={item.id} className="flex justify-between text-sm">
-                  <span>{item.name} × {item.qty}</span>
-                  <span>₹{item.price * item.qty}</span>
-                </div>
-              ))}
-              <hr className="border-[var(--color-border-soft)]" />
-              <div className="flex justify-between text-sm">
+          <aside className={styles.sidebar}>
+            <div className={styles.summaryCard}>
+              <h3 className={styles.summaryTitle}>Order Summary</h3>
+              <div className={styles.summaryItems}>
+                {items.map((item) => (
+                  <div key={item.id} className={styles.summaryItem}>
+                    <span className={styles.summaryItemName}>{item.name} × {item.qty}</span>
+                    <span className={styles.summaryItemPrice}>₹{item.price * item.qty}</span>
+                  </div>
+                ))}
+              </div>
+              <div className={styles.summaryDivider} />
+              <div className={styles.summaryRow}>
                 <span>Subtotal</span>
                 <span>₹{cartTotal}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className={styles.summaryRow}>
                 <span>Shipping</span>
-                <span>{shipping === 0 ? "Free" : `₹${shipping}`}</span>
+                <span className={shipping === 0 ? styles.freeShipping : ""}>
+                  {shipping === 0 ? "Free" : `₹${shipping}`}
+                </span>
               </div>
               {codCharge > 0 && (
-                <div className="flex justify-between text-sm">
+                <div className={styles.summaryRow}>
                   <span>COD Charge</span>
                   <span>₹{codCharge}</span>
                 </div>
               )}
-              <div className="flex justify-between font-bold text-lg">
+              <div className={styles.summaryDivider} />
+              <div className={styles.summaryTotal}>
                 <span>Total</span>
                 <span>₹{grandTotal}</span>
               </div>
-              <div className="flex gap-2 pt-2">
-                <span className="text-xs bg-gray-100 px-2 py-1 rounded">Razorpay</span>
-                <span className="text-xs bg-gray-100 px-2 py-1 rounded">UPI</span>
-                <span className="text-xs bg-gray-100 px-2 py-1 rounded">COD</span>
+              {shipping === 0 && (
+                <div className={styles.freeShippingNote}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7a9e6e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                  </svg>
+                  Free shipping on orders above ₹499
+                </div>
+              )}
+            </div>
+
+            <div className={styles.trustBadges}>
+              <div className={styles.trustItem}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8B4513" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                <span>Secure Payment</span>
+              </div>
+              <div className={styles.trustItem}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8B4513" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="1" y="3" width="15" height="13" />
+                  <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                  <circle cx="5.5" cy="18.5" r="2.5" />
+                  <circle cx="18.5" cy="18.5" r="2.5" />
+                </svg>
+                <span>Fast Delivery</span>
+              </div>
+              <div className={styles.trustItem}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8B4513" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <span>100% Authentic</span>
               </div>
             </div>
-          </div>
+          </aside>
         </div>
       </div>
     </section>

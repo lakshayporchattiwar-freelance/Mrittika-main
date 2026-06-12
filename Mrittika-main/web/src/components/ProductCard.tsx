@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import WishlistButton from "@/components/WishlistButton";
 import styles from "./ProductCard.module.css";
@@ -15,7 +16,9 @@ type ProductCardProps = {
 
 export default function ProductCard({ product, priority = false }: ProductCardProps) {
   const { addItem } = useCart();
+  const router = useRouter();
   const [hovered, setHovered] = useState(false);
+  const [buyNowLoading, setBuyNowLoading] = useState(false);
 
   const displayImage =
     hovered && product.images.length > 1
@@ -31,6 +34,19 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
       qty: 1,
       image: product.image,
     });
+  };
+
+  const handleBuyNow = () => {
+    setBuyNowLoading(true);
+    addItem({
+      id: product.id,
+      name: product.name,
+      slug: product.slug,
+      price: product.price,
+      qty: 1,
+      image: product.image,
+    });
+    router.push("/checkout");
   };
 
   return (
@@ -59,9 +75,13 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           <button className={styles.btnCart} onClick={handleAdd}>
             Add to Cart
           </button>
-          <Link href={`/product/${product.slug}`} className={styles.btnBuy}>
-            Buy Now
-          </Link>
+          <button
+            className={styles.btnBuy}
+            onClick={handleBuyNow}
+            disabled={buyNowLoading}
+          >
+            {buyNowLoading ? "Processing..." : "Buy Now"}
+          </button>
         </div>
       </div>
     </div>

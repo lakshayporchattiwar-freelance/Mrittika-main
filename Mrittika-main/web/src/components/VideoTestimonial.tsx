@@ -42,6 +42,8 @@ export default function VideoTestimonial({ videoSrc }: VideoTestimonialProps) {
           src={videoSrc}
           preload="metadata"
           playsInline
+
+          loop
           className={styles.video}
         />
         <button

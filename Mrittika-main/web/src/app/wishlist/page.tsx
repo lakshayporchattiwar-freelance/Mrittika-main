@@ -11,11 +11,15 @@ import styles from "./wishlist.module.css";
 
 export default function WishlistPage() {
   const { addItem } = useCart();
-  const [slugs, setSlugs] = useState<string[]>(() => getWishlist());
+  const [slugs, setSlugs] = useState<string[]>([]);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    Promise.resolve().then(() => setMounted(true));
+    setSlugs(getWishlist());
+    setMounted(true);
+    const sync = () => setSlugs(getWishlist());
+    window.addEventListener("wishlist-updated", sync);
+    return () => window.removeEventListener("wishlist-updated", sync);
   }, []);
 
   const handleRemove = (slug: string) => {
@@ -25,17 +29,15 @@ export default function WishlistPage() {
 
   const wishlisted = products.filter((p) => slugs.includes(p.slug));
 
-  if (!mounted) return null;
-
   return (
     <section className={`section ${styles.wishlist}`}>
       <div className="container">
         <h1>Your Wishlist</h1>
 
-        {wishlisted.length === 0 ? (
+        {!mounted || wishlisted.length === 0 ? (
           <div className={styles.empty}>
             <Heart size={48} className={styles.emptyHeart} />
-            <p>Your wishlist is empty</p>
+            <p>{mounted ? "Your wishlist is empty" : "Loading your wishlist…"}</p>
             <Link href="/shop" className="btn btn-primary btn-lg">
               Start Shopping
             </Link>

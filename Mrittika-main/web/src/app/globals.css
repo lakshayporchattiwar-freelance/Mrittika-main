@@ -335,3 +335,16 @@ h5 {
 .animate-page-in {
   animation: pageFadeIn 0.5s var(--ease-out) both;
 }
+
+.hero-frame-canvas {
+  will-change: contents;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  image-rendering: crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+section[aria-label="Mrittika brand story"] {
+  contain: strict;
+}

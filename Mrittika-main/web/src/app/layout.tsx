@@ -14,7 +14,6 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://mrittika-main.vercel.app"),
   icons: {
     icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
     apple: "/favicon.ico",
   },
   openGraph: {
@@ -49,11 +48,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="grain-overlay">
-        <link rel="preload" href="/frames/webp_frame_0001.webp" as="image" />
-        <link rel="preload" href="/frames/webp_frame_0002.webp" as="image" />
-        <link rel="preload" href="/frames/webp_frame_0003.webp" as="image" />
-        <link rel="preload" href="/frames/webp_frame_0004.webp" as="image" />
-        <link rel="preload" href="/frames/webp_frame_0005.webp" as="image" />
+        <link rel="preload" href="/hero/frames/webp_frame_0001.webp" as="image" media="(min-width: 769px)" />
+        <link rel="preload" href="/hero/frames/webp_frame_0002.webp" as="image" media="(min-width: 769px)" />
+        <link rel="preload" href="/hero/frames_mobile/webp_frame_0001.webp" as="image" media="(max-width: 768px)" />
+        <link rel="preload" href="/hero/frames_mobile/webp_frame_0002.webp" as="image" media="(max-width: 768px)" />
         <a href="#main" className="skip-link">
           Skip to main content
         </a>

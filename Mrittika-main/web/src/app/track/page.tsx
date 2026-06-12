@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { XCircle } from "lucide-react";
@@ -38,7 +38,6 @@ function TrackContent() {
   const [tracking, setTracking] = useState<TrackingStatus | null>(null);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [initialFetched, setInitialFetched] = useState(false);
   const [copyMsg, setCopyMsg] = useState("");
 
   const fetchOrder = useCallback(async (id: string) => {
@@ -73,16 +72,17 @@ function TrackContent() {
     setLoading(false);
   }, []);
 
+  useEffect(() => {
+    if (initialId) {
+      fetchOrder(initialId);
+    }
+  }, [initialId, fetchOrder]);
+
   const handleTrack = useCallback(() => {
     const searchId = query.trim();
     if (!searchId) return;
     fetchOrder(searchId);
   }, [query, fetchOrder]);
-
-  if (initialId && !initialFetched) {
-    setInitialFetched(true);
-    fetchOrder(initialId);
-  }
 
   const currentStage = order ? getStageIndex(order.status) : -1;
 

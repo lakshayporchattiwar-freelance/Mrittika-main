@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import type { CartItem } from "@/lib/types";
 
 type CartContextType = {
@@ -11,6 +11,7 @@ type CartContextType = {
   clearCart: () => void;
   total: number;
   count: number;
+  mounted: boolean;
 };
 
 const CartContext = createContext<CartContextType>(null!);
@@ -21,23 +22,34 @@ export function useCart(): CartContextType {
   return ctx;
 }
 
+const STORAGE_KEY = "mrittika_cart";
+
+function readStorage(): CartItem[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch {
+    // ignore
+  }
+  return [];
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const stored = localStorage.getItem("mrittika_cart");
-      if (stored) return JSON.parse(stored);
-    } catch {
-      // ignore parse errors
-    }
-    return [];
-  });
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem("mrittika_cart", JSON.stringify(items));
-  }, [items]);
+    setItems(readStorage());
+    setMounted(true);
+  }, []);
 
-  const addItem = (item: CartItem) => {
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    }
+  }, [items, mounted]);
+
+  const addItem = useCallback((item: CartItem) => {
     setItems((prev) => {
       const existing = prev.find((i) => i.id === item.id);
       if (existing) {
@@ -47,28 +59,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, item];
     });
-  };
+  }, []);
 
-  const removeItem = (id: string) => {
+  const removeItem = useCallback((id: string) => {
     setItems((prev) => prev.filter((i) => i.id !== id));
-  };
+  }, []);
 
-  const updateQty = (id: string, qty: number) => {
+  const updateQty = useCallback((id: string, qty: number) => {
     if (qty < 1) {
       setItems((prev) => prev.filter((i) => i.id !== id));
       return;
     }
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, qty } : i)));
-  };
+  }, []);
 
-  const clearCart = () => setItems([]);
+  const clearCart = useCallback(() => setItems([]), []);
 
   const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
   const count = items.reduce((sum, i) => sum + i.qty, 0);
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQty, clearCart, total, count }}
+      value={{ items, addItem, removeItem, updateQty, clearCart, total, count, mounted }}
     >
       {children}
     </CartContext.Provider>
