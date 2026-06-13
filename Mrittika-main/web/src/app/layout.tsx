@@ -13,8 +13,15 @@ export const metadata: Metadata = {
     "natural face pack India, ubtan face pack, botanical skincare, handmade skincare India, Mrittika",
   metadataBase: new URL("https://mrittika-main.vercel.app"),
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.ico", type: "image/x-icon" },
+    ],
+    shortcut: "/favicon.ico",
     apple: "/favicon.ico",
+  },
+  other: {
+    "msapplication-TileImage": "/favicon.ico",
   },
   openGraph: {
     title: "Mrittika — Natural Skincare Handcrafted for Indian Skin",
