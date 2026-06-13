@@ -4,7 +4,7 @@ import { useEffect } from "react";
 
 declare global {
   interface Window {
-    Razorpay?: new (options: Record<string, unknown>) => { open: () => void; on: (event: string, handler: () => void) => void };
+    Razorpay?: new (options: Record<string, unknown>) => { open: () => void; on: (event: string, handler: (resp: any) => void) => void };
   }
 }
 

@@ -348,3 +348,46 @@ h5 {
 section[aria-label="Mrittika brand story"] {
   contain: strict;
 }
+
+@keyframes bounce-once {
+  0%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-12px); }
+  60% { transform: translateY(-6px); }
+}
+
+.animate-bounce-once {
+  animation: bounce-once 0.8s ease forwards;
+}
+
+@keyframes truck-drive {
+  0% { transform: translateX(-120%); }
+  60% { transform: translateX(0); }
+  75% { transform: translateX(8px); }
+  85% { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes truck-bounce {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-2px); }
+  50% { transform: translateY(0); }
+  75% { transform: translateY(-1px); }
+}
+
+@keyframes dust-puff {
+  0% { opacity: 0.6; transform: scale(0.5) translateX(0); }
+  100% { opacity: 0; transform: scale(1.5) translateX(-20px); }
+}
+
+.animate-truck-drive {
+  animation: truck-drive 1.4s var(--ease-spring) forwards;
+}
+
+.animate-truck-bounce {
+  animation: truck-bounce 0.4s ease-in-out infinite;
+  animation-delay: 1.4s;
+}
+
+.animate-dust {
+  animation: dust-puff 0.6s ease-out forwards;
+}
