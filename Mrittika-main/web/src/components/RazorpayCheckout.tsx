@@ -229,14 +229,13 @@ export default function RazorpayCheckout({
       <button
         onClick={handlePayment}
         disabled={loading || !scriptLoaded}
-        className={`
-          w-full py-4 rounded-xl font-semibold text-white text-base
-          transition-all duration-200 active:scale-95
-          ${loading || !scriptLoaded
-            ? 'bg-stone-300 cursor-not-allowed'
-            : 'bg-[#8B4513] hover:bg-[#7a3b10] shadow-lg hover:shadow-xl'
-          }
-        `}
+        className="btn btn-primary btn-lg"
+        style={{
+          width: '100%',
+          justifyContent: 'center',
+          opacity: loading || !scriptLoaded ? 0.6 : 1,
+          cursor: loading || !scriptLoaded ? 'not-allowed' : 'pointer',
+        }}
       >
         {!scriptLoaded
           ? 'Loading payment...'
@@ -246,8 +245,13 @@ export default function RazorpayCheckout({
         }
       </button>
 
-      <p className="text-center text-xs text-stone-400 mt-3">
-        🔒 Secured by Razorpay · 256-bit SSL encryption
+      <p style={{
+        textAlign: 'center',
+        fontSize: '0.75rem',
+        color: 'var(--color-text-muted)',
+        marginTop: '0.75rem',
+      }}>
+        Secured by Razorpay · 256-bit SSL encryption
       </p>
     </div>
   );

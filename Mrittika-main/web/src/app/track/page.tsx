@@ -2,8 +2,10 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Suspense } from "react";
-import { XCircle } from "lucide-react";
+import { XCircle, Search, Copy, Check } from "lucide-react";
+import DeliveryTracker from "@/components/DeliveryTracker";
 import type { OrderRecord } from "@/lib/orderStore";
 
 const STAGES = [
@@ -61,6 +63,15 @@ interface TrackingResponse {
   error?: string;
 }
 
+const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
+  "Order Confirmed": { bg: "rgba(193, 98, 43, 0.08)", text: "var(--color-primary)" },
+  Processing: { bg: "rgba(193, 98, 43, 0.08)", text: "var(--color-primary-dark)" },
+  Shipped: { bg: "rgba(59, 130, 246, 0.08)", text: "#2563eb" },
+  "Out for Delivery": { bg: "rgba(234, 88, 12, 0.08)", text: "#c2410c" },
+  Delivered: { bg: "rgba(90, 122, 80, 0.08)", text: "var(--color-natural-dark)" },
+  Cancelled: { bg: "rgba(220, 38, 38, 0.08)", text: "#b91c1c" },
+};
+
 function TrackContent() {
   const searchParams = useSearchParams();
   const initialId = searchParams.get("id") ?? "";
@@ -70,7 +81,7 @@ function TrackContent() {
   const [trackingMessage, setTrackingMessage] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [copyMsg, setCopyMsg] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const fetchOrder = useCallback(async (id: string) => {
     setLoading(true);
@@ -146,41 +157,79 @@ function TrackContent() {
   }, [query, fetchOrder]);
 
   const currentStage = order ? getStageIndex(order.status) : -1;
+  const isCancelled = order?.status === "Cancelled";
 
   const copyAwb = (awb: string) => {
     navigator.clipboard.writeText(awb).then(() => {
-      setCopyMsg("Copied!");
-      setTimeout(() => setCopyMsg(""), 2000);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     });
   };
 
-  const isCancelled = order?.status === "Cancelled";
+  const statusStyle = order ? (STATUS_STYLES[order.status] || STATUS_STYLES["Order Confirmed"]) : STATUS_STYLES["Order Confirmed"];
 
   return (
-    <section className="section py-12">
-      <div className="container max-w-2xl">
-        <h1 className="font-display text-3xl mb-8">Track Your Order</h1>
+    <section className="section">
+      <div className="container max-w-2xl" style={{ paddingTop: '2rem', paddingBottom: '4rem' }}>
+        <h1 style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: 'var(--text-3xl)',
+          color: 'var(--color-text-dark)',
+          marginBottom: '2rem',
+          letterSpacing: 'var(--tracking-tight)',
+        }}>
+          Track Your Order
+        </h1>
 
-        <div className="flex gap-3 mb-10">
-          <input
-            className="input flex-1"
-            type="text"
-            placeholder="Enter Order ID (e.g. MRT-1234567890)"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleTrack()}
-          />
-          <button className="btn btn-primary" onClick={handleTrack} disabled={loading}>
+        <div style={{
+          display: 'flex',
+          gap: '0.75rem',
+          marginBottom: '2.5rem',
+        }}>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <Search
+              size={16}
+              style={{
+                position: 'absolute',
+                left: '1rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'var(--color-text-muted)',
+              }}
+            />
+            <input
+              className="input"
+              type="text"
+              placeholder="Enter Order ID (e.g. MRT-1234567890)"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleTrack()}
+              style={{ paddingLeft: '2.75rem' }}
+            />
+          </div>
+          <button
+            className="btn btn-primary"
+            onClick={handleTrack}
+            disabled={loading}
+            style={{ whiteSpace: 'nowrap' }}
+          >
             {loading ? "Searching..." : "Track"}
           </button>
         </div>
 
         {searched && !order && !loading && (
-          <div className="text-center py-12">
-            <p className="text-[var(--color-text-muted)] mb-2">Order not found.</p>
-            <p className="text-sm">
-              Could not load tracking. Contact us on WhatsApp:{" "}
-              <a href="https://wa.me/916000386664" className="text-[#8B4513] underline">
+          <div style={{
+            textAlign: 'center',
+            padding: '3rem 1rem',
+            background: 'var(--color-white-warm)',
+            borderRadius: 'var(--radius-lg)',
+            boxShadow: 'var(--shadow-xs)',
+          }}>
+            <Search size={40} style={{ margin: '0 auto 1rem', color: 'var(--color-border-soft)' }} />
+            <p style={{ color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>Order not found</p>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>
+              Contact us on WhatsApp:{" "}
+              <a href="https://wa.me/916000386664" style={{ color: 'var(--color-primary)', textDecoration: 'underline' }}>
                 6000386664
               </a>
             </p>
@@ -188,60 +237,121 @@ function TrackContent() {
         )}
 
         {order && (
-          <div className="space-y-8">
-            <div className="bg-[var(--color-white-warm)] rounded-lg p-6 space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm text-[var(--color-text-muted)]">Order ID</span>
-                <span className="font-semibold">{order.id}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-[var(--color-text-muted)]">Date</span>
-                <span>
-                  {new Date(order.createdAt).toLocaleDateString("en-IN", {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric",
-                  })}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {/* Order Info Card */}
+            <div style={{
+              background: 'var(--color-white-warm)',
+              borderRadius: 'var(--radius-lg)',
+              boxShadow: 'var(--shadow-xs)',
+              padding: '1.5rem',
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1.25rem',
+                paddingBottom: '1rem',
+                borderBottom: '1px solid var(--color-border-soft)',
+              }}>
+                <div>
+                  <p style={{
+                    fontFamily: 'var(--font-body)',
+                    fontWeight: 600,
+                    fontSize: 'var(--text-base)',
+                    color: 'var(--color-text-dark)',
+                    marginBottom: '0.25rem',
+                  }}>
+                    {order.id}
+                  </p>
+                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>
+                    {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </p>
+                </div>
+                <span style={{
+                  fontSize: '0.6875rem',
+                  fontWeight: 600,
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                  background: statusStyle.bg,
+                  color: statusStyle.text,
+                  padding: '0.375rem 0.875rem',
+                  borderRadius: 'var(--radius-full)',
+                }}>
+                  {order.status}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-[var(--color-text-muted)]">Payment</span>
-                <span>{order.paymentMethod}</span>
-              </div>
-              {!isCancelled && order.awbNumber ? (
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-[var(--color-text-muted)]">AWB</span>
-                  <span className="flex items-center gap-2">
-                    <strong>{order.awbNumber}</strong>
-                    <button
-                      onClick={() => copyAwb(order.awbNumber!)}
-                      className="text-xs text-[#8B4513] hover:underline"
-                    >
-                      {copyMsg || "Copy"}
-                    </button>
-                  </span>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-sm)' }}>
+                  <span style={{ color: 'var(--color-text-muted)' }}>Payment</span>
+                  <span style={{ color: 'var(--color-text-dark)', fontWeight: 500 }}>{order.paymentMethod}</span>
                 </div>
-              ) : !isCancelled ? (
-                <p className="text-sm text-[var(--color-text-muted)] italic">
-                  Your order is confirmed and will be picked up for delivery shortly. AWB not yet assigned.
-                </p>
-              ) : null}
+                {!isCancelled && order.awbNumber ? (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 'var(--text-sm)' }}>
+                    <span style={{ color: 'var(--color-text-muted)' }}>AWB</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <strong style={{ color: 'var(--color-text-dark)' }}>{order.awbNumber}</strong>
+                      <button
+                        onClick={() => copyAwb(order.awbNumber!)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: 'var(--color-primary)',
+                          padding: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        {copied ? <Check size={12} /> : <Copy size={12} />}
+                        {copied ? "Copied" : "Copy"}
+                      </button>
+                    </span>
+                  </div>
+                ) : !isCancelled ? (
+                  <p style={{
+                    fontSize: 'var(--text-sm)',
+                    color: 'var(--color-text-muted)',
+                    fontStyle: 'italic',
+                  }}>
+                    AWB will be assigned once your order is picked up for delivery.
+                  </p>
+                ) : null}
+              </div>
             </div>
 
+            {/* Delivery Tracker or Cancelled */}
             {isCancelled && order.cancellation ? (
-              <div className="border-2 border-red-300 rounded-lg p-6 bg-red-50/50">
-                <div className="flex items-center gap-3 mb-4">
-                  <XCircle size={28} className="text-red-500" />
-                  <h2 className="font-display text-xl text-red-700">Order Cancelled</h2>
+              <div style={{
+                border: '1px solid rgba(220, 38, 38, 0.2)',
+                borderRadius: 'var(--radius-lg)',
+                padding: '1.5rem',
+                background: 'rgba(220, 38, 38, 0.03)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                  <XCircle size={24} style={{ color: '#b91c1c' }} />
+                  <h2 style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 'var(--text-xl)',
+                    color: '#b91c1c',
+                    margin: 0,
+                  }}>
+                    Order Cancelled
+                  </h2>
                 </div>
-
-                <div className="space-y-2 text-sm">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: 'var(--text-sm)' }}>
                   <p>
-                    <span className="text-[var(--color-text-muted)]">Reason:</span>{" "}
+                    <span style={{ color: 'var(--color-text-muted)' }}>Reason:</span>{" "}
                     {order.cancellation.reason}
                   </p>
                   <p>
-                    <span className="text-[var(--color-text-muted)]">Cancelled on:</span>{" "}
+                    <span style={{ color: 'var(--color-text-muted)' }}>Cancelled on:</span>{" "}
                     {order.cancelledAt
                       ? new Date(order.cancelledAt).toLocaleDateString("en-IN", {
                           day: "2-digit",
@@ -252,13 +362,24 @@ function TrackContent() {
                   </p>
                   {order.cancellation.status === "Refund Initiated" ||
                   order.cancellation.status === "Refunded" ? (
-                    <span className="inline-block mt-2 text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">
+                    <span style={{
+                      display: 'inline-block',
+                      marginTop: '0.5rem',
+                      fontSize: '0.6875rem',
+                      fontWeight: 600,
+                      letterSpacing: '0.04em',
+                      textTransform: 'uppercase',
+                      background: 'rgba(90, 122, 80, 0.1)',
+                      color: 'var(--color-natural-dark)',
+                      padding: '0.375rem 0.875rem',
+                      borderRadius: 'var(--radius-full)',
+                    }}>
                       Refund of ₹{order.cancellation.refundAmount ?? order.total} — {order.cancellation.status}
                     </span>
                   ) : order.cancellation.status === "Pending" ? (
-                    <p className="mt-2 text-sm text-orange-600">
-                      Refund under review — contact us on WhatsApp:{" "}
-                      <a href="https://wa.me/916000386664" className="underline">
+                    <p style={{ marginTop: '0.5rem', color: '#c2410c', fontSize: 'var(--text-sm)' }}>
+                      Refund under review — WhatsApp us:{" "}
+                      <a href="https://wa.me/916000386664" style={{ textDecoration: 'underline' }}>
                         6000386664
                       </a>
                     </p>
@@ -268,91 +389,134 @@ function TrackContent() {
             ) : (
               <>
                 {trackingMessage && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p className="text-sm text-blue-700">{trackingMessage}</p>
+                  <div style={{
+                    background: 'rgba(59, 130, 246, 0.05)',
+                    border: '1px solid rgba(59, 130, 246, 0.15)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '0.875rem 1rem',
+                    fontSize: 'var(--text-sm)',
+                    color: '#2563eb',
+                  }}>
+                    {trackingMessage}
                   </div>
                 )}
 
-                <div className="relative pl-8">
-                  {STAGES.map((stage, index) => {
-                    const isCompleted = index <= currentStage;
-                    const isCurrent = index === currentStage;
-                    const isLast = index === STAGES.length - 1;
-
-                    return (
-                      <div key={stage} className="relative pb-8 last:pb-0">
-                        {!isLast && (
-                          <div
-                            className={`absolute left-[-24px] top-[28px] w-0.5 h-full ${
-                              index < currentStage ? "bg-green-500" : "bg-gray-200"
-                            }`}
-                          />
-                        )}
-                        <div
-                          className={`absolute left-[-32px] top-[6px] w-5 h-5 rounded-full flex items-center justify-center ${
-                            isCompleted
-                              ? "bg-green-500"
-                              : "bg-gray-200"
-                          } ${isCurrent ? "ring-4 ring-green-500/30 animate-pulse" : ""}`}
-                        >
-                          {isCompleted && !isCurrent && (
-                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                        </div>
-                        <div>
-                          <span
-                            className={`font-medium ${
-                              isCompleted ? "text-green-700" : "text-gray-400"
-                            }`}
-                          >
-                            {stage}
-                          </span>
-                          {isCurrent && (
-                            <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                              Current
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                {/* Delivery Tracker Card */}
+                <div style={{
+                  background: 'var(--color-white-warm)',
+                  borderRadius: 'var(--radius-lg)',
+                  boxShadow: 'var(--shadow-xs)',
+                  padding: '1.5rem',
+                }}>
+                  <h3 style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 'var(--text-lg)',
+                    color: 'var(--color-text-dark)',
+                    marginBottom: '1.5rem',
+                    paddingBottom: '0.75rem',
+                    borderBottom: '1px solid var(--color-border-soft)',
+                  }}>
+                    Delivery Status
+                  </h3>
+                  <DeliveryTracker currentStage={currentStage} showDeliveredMessage />
                 </div>
-
-                {activities.length > 0 && (
-                  <div className="bg-[var(--color-white-warm)] rounded-lg p-6">
-                    <h3 className="font-display text-lg mb-4">Shipment Activity</h3>
-                    <div className="space-y-3">
-                      {activities.map((a, i) => (
-                        <div key={i} className="flex gap-4 text-sm border-b border-gray-100 pb-3 last:border-0">
-                          <span className="text-[var(--color-text-muted)] min-w-[100px]">{a.date}</span>
-                          <span className="flex-1">{a.activity}</span>
-                          <span className="text-[var(--color-text-muted)]">{a.location}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </>
             )}
 
-            <div className="bg-[var(--color-cream-deep)] rounded-lg p-6">
-              <h3 className="font-display text-lg mb-3">Items Ordered</h3>
+            {/* Shipment Activity */}
+            {activities.length > 0 && (
+              <div style={{
+                background: 'var(--color-white-warm)',
+                borderRadius: 'var(--radius-lg)',
+                boxShadow: 'var(--shadow-xs)',
+                padding: '1.5rem',
+              }}>
+                <h3 style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 'var(--text-lg)',
+                  color: 'var(--color-text-dark)',
+                  marginBottom: '1rem',
+                  paddingBottom: '0.75rem',
+                  borderBottom: '1px solid var(--color-border-soft)',
+                }}>
+                  Shipment Activity
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                  {activities.map((a, i) => (
+                    <div key={i} style={{
+                      display: 'flex',
+                      gap: '1rem',
+                      fontSize: 'var(--text-sm)',
+                      padding: '0.625rem 0',
+                      borderBottom: i < activities.length - 1 ? '1px solid var(--color-cream-deep)' : 'none',
+                    }}>
+                      <span style={{ color: 'var(--color-text-muted)', minWidth: '100px', flexShrink: 0 }}>{a.date}</span>
+                      <span style={{ flex: 1, color: 'var(--color-text-dark)' }}>{a.activity}</span>
+                      <span style={{ color: 'var(--color-text-muted)' }}>{a.location}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Items Ordered */}
+            <div style={{
+              background: 'var(--color-cream-deep)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '1.5rem',
+            }}>
+              <h3 style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 'var(--text-lg)',
+                color: 'var(--color-text-dark)',
+                marginBottom: '1rem',
+              }}>
+                Items Ordered
+              </h3>
               {order.items.map((item, i) => (
-                <div key={i} className="flex justify-between text-sm py-1">
-                  <span>{item.name} × {item.qty}</span>
-                  <span>₹{item.price * item.qty}</span>
+                <div key={i} style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontSize: 'var(--text-sm)',
+                  padding: '0.375rem 0',
+                  color: 'var(--color-text-dark)',
+                }}>
+                  <span>{item.name} &times; {item.qty}</span>
+                  <span style={{ fontWeight: 500 }}>₹{item.price * item.qty}</span>
                 </div>
               ))}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: 'var(--text-base)',
+                fontWeight: 700,
+                color: 'var(--color-text-dark)',
+                marginTop: '0.75rem',
+                paddingTop: '0.75rem',
+                borderTop: '1px solid var(--color-border-soft)',
+              }}>
+                <span>Total</span>
+                <span>₹{order.total}</span>
+              </div>
+            </div>
+
+            <div style={{ textAlign: 'center', marginTop: '0.5rem' }}>
+              <Link href="/orders" className="btn btn-ghost" style={{ fontSize: 'var(--text-sm)' }}>
+                View All Orders
+              </Link>
             </div>
           </div>
         )}
 
         {!searched && !loading && (
-          <p className="text-center text-[var(--color-text-muted)]">
+          <div style={{
+            textAlign: 'center',
+            padding: '3rem 1rem',
+            color: 'var(--color-text-muted)',
+            fontSize: 'var(--text-sm)',
+          }}>
             Enter your order ID above to see the delivery status.
-          </p>
+          </div>
         )}
       </div>
     </section>
@@ -363,8 +527,10 @@ export default function TrackPage() {
   return (
     <Suspense
       fallback={
-        <div className="section py-12">
-          <div className="container text-center"><p>Loading...</p></div>
+        <div className="section">
+          <div className="container text-center" style={{ paddingTop: '3rem' }}>
+            <p style={{ color: 'var(--color-text-muted)' }}>Loading...</p>
+          </div>
         </div>
       }
     >

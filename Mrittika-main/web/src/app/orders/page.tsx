@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Package, X } from "lucide-react";
+import { Package, X, ChevronRight } from "lucide-react";
 import type { OrderRecord } from "@/lib/orderStore";
 
-const STATUS_COLORS: Record<string, string> = {
-  "Order Confirmed": "bg-gray-200 text-gray-700",
-  Processing: "bg-yellow-100 text-yellow-700",
-  Shipped: "bg-blue-100 text-blue-700",
-  "Out for Delivery": "bg-orange-100 text-orange-700",
-  Delivered: "bg-green-100 text-green-700",
-  Cancelled: "bg-red-100 text-red-700",
+const STATUS_STYLES: Record<string, { bg: string; text: string; dot: string }> = {
+  "Order Confirmed": { bg: "rgba(193, 98, 43, 0.08)", text: "var(--color-primary)", dot: "var(--color-primary)" },
+  Processing: { bg: "rgba(193, 98, 43, 0.08)", text: "var(--color-primary-dark)", dot: "var(--color-primary-dark)" },
+  Shipped: { bg: "rgba(59, 130, 246, 0.08)", text: "#2563eb", dot: "#2563eb" },
+  "Out for Delivery": { bg: "rgba(234, 88, 12, 0.08)", text: "#c2410c", dot: "#c2410c" },
+  Delivered: { bg: "rgba(90, 122, 80, 0.08)", text: "var(--color-natural-dark)", dot: "var(--color-natural-dark)" },
+  Cancelled: { bg: "rgba(220, 38, 38, 0.08)", text: "#b91c1c", dot: "#b91c1c" },
 };
 
 const CANCEL_REASONS = [
@@ -37,9 +37,7 @@ export default function OrdersPage() {
     try {
       const stored = localStorage.getItem("mrittika_orders");
       if (stored) localOrders = JSON.parse(stored);
-    } catch {
-      // ignore
-    }
+    } catch {}
 
     setMounted(true);
 
@@ -129,112 +127,272 @@ export default function OrdersPage() {
 
   if (!mounted) {
     return (
-      <section className="section py-12">
-        <div className="container text-center">
-          <h1 className="font-display text-3xl mb-4">My Orders</h1>
-          <Package size={48} className="mx-auto text-gray-300 mb-4" />
-          <p className="text-[var(--color-text-muted)]">Loading orders...</p>
+      <section className="section">
+        <div className="container max-w-2xl" style={{ paddingTop: '3rem', textAlign: 'center' }}>
+          <h1 style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 'var(--text-3xl)',
+            color: 'var(--color-text-dark)',
+            marginBottom: '2rem',
+          }}>
+            My Orders
+          </h1>
+          <div style={{
+            width: '2rem',
+            height: '2rem',
+            border: '2px solid var(--color-primary)',
+            borderTopColor: 'transparent',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite',
+            margin: '0 auto',
+          }} />
         </div>
       </section>
     );
   }
 
   return (
-    <section className="section py-12">
-      <div className="container max-w-3xl">
-        <h1 className="font-display text-3xl mb-8">My Orders</h1>
+    <section className="section">
+      <div className="container max-w-2xl" style={{ paddingTop: '2rem', paddingBottom: '4rem' }}>
+        <h1 style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: 'var(--text-3xl)',
+          color: 'var(--color-text-dark)',
+          marginBottom: '2rem',
+          letterSpacing: 'var(--tracking-tight)',
+        }}>
+          My Orders
+        </h1>
 
         {orders.length === 0 ? (
-          <div className="text-center py-16">
-            <Package size={48} className="mx-auto text-gray-300 mb-4" />
-            <p className="text-[var(--color-text-muted)] mb-6">No orders yet</p>
+          <div style={{
+            textAlign: 'center',
+            padding: '4rem 1rem',
+            background: 'var(--color-white-warm)',
+            borderRadius: 'var(--radius-lg)',
+            boxShadow: 'var(--shadow-xs)',
+          }}>
+            <Package size={40} style={{ margin: '0 auto 1rem', color: 'var(--color-border-soft)' }} />
+            <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>No orders yet</p>
             <Link href="/shop" className="btn btn-primary btn-lg">
               Start Shopping
             </Link>
           </div>
         ) : (
-          <div className="space-y-4">
-            {orders.map((order) => (
-              <div
-                key={order.id}
-                className="bg-[var(--color-white-warm)] rounded-lg p-6 shadow-sm"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="font-semibold">{order.id}</p>
-                    <p className="text-sm text-[var(--color-text-muted)]">
-                      {new Date(order.createdAt).toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "long",
-                        year: "numeric",
-                      })}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {orders.map((order) => {
+              const statusStyle = STATUS_STYLES[order.status] || STATUS_STYLES["Order Confirmed"];
+
+              return (
+                <div
+                  key={order.id}
+                  style={{
+                    background: 'var(--color-white-warm)',
+                    borderRadius: 'var(--radius-lg)',
+                    boxShadow: 'var(--shadow-xs)',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div style={{ padding: '1.25rem 1.5rem' }}>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      marginBottom: '0.75rem',
+                    }}>
+                      <div>
+                        <p style={{
+                          fontWeight: 600,
+                          fontSize: 'var(--text-base)',
+                          color: 'var(--color-text-dark)',
+                          marginBottom: '0.25rem',
+                        }}>
+                          {order.id}
+                        </p>
+                        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>
+                          {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </p>
+                      </div>
+                      <span style={{
+                        fontSize: '0.6875rem',
+                        fontWeight: 600,
+                        letterSpacing: '0.04em',
+                        textTransform: 'uppercase',
+                        background: statusStyle.bg,
+                        color: statusStyle.text,
+                        padding: '0.375rem 0.875rem',
+                        borderRadius: 'var(--radius-full)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.375rem',
+                      }}>
+                        <span style={{
+                          width: '6px',
+                          height: '6px',
+                          borderRadius: '50%',
+                          background: statusStyle.dot,
+                        }} />
+                        {order.status}
+                      </span>
+                    </div>
+
+                    <p style={{
+                      fontSize: 'var(--text-sm)',
+                      color: 'var(--color-text-muted)',
+                      marginBottom: '0.75rem',
+                      lineHeight: 1.4,
+                    }}>
+                      {order.items.map((item) => `${item.name} × ${item.qty}`).join(" · ")}
                     </p>
-                  </div>
-                  <span
-                    className={`text-xs px-3 py-1 rounded-full font-medium ${
-                      STATUS_COLORS[order.status] ?? "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    {order.status}
-                  </span>
-                </div>
 
-                <p className="text-sm text-[var(--color-text-muted)] mb-2">
-                  {order.items.map((item) => `${item.name} × ${item.qty}`).join(", ")}
-                </p>
-
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--color-border-soft)]">
-                  <div className="flex items-center gap-3">
-                    <span className="font-semibold">₹{order.total}</span>
-                    {(order.status === "Order Confirmed" || order.status === "Processing") && (
-                      <button
-                        onClick={() => openCancelModal(order)}
-                        className="border border-red-400 text-red-500 text-xs px-3 py-1 rounded-lg hover:bg-red-50 transition"
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      paddingTop: '0.75rem',
+                      borderTop: '1px solid var(--color-border-soft)',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <span style={{
+                          fontWeight: 700,
+                          fontSize: 'var(--text-base)',
+                          color: 'var(--color-text-dark)',
+                        }}>
+                          ₹{order.total}
+                        </span>
+                        {(order.status === "Order Confirmed" || order.status === "Processing") && (
+                          <button
+                            onClick={() => openCancelModal(order)}
+                            style={{
+                              fontSize: '0.75rem',
+                              fontWeight: 500,
+                              color: '#b91c1c',
+                              background: 'rgba(220, 38, 38, 0.06)',
+                              border: '1px solid rgba(220, 38, 38, 0.15)',
+                              borderRadius: 'var(--radius-full)',
+                              padding: '0.25rem 0.75rem',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = 'rgba(220, 38, 38, 0.12)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'rgba(220, 38, 38, 0.06)';
+                            }}
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
+                      <Link
+                        href={`/track?id=${order.id}`}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                          fontSize: 'var(--text-sm)',
+                          fontWeight: 600,
+                          color: 'var(--color-primary)',
+                          textDecoration: 'none',
+                          transition: 'gap 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.gap = '0.5rem'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.gap = '0.25rem'; }}
                       >
-                        Cancel Order
-                      </button>
-                    )}
+                        Track Order <ChevronRight size={14} />
+                      </Link>
+                    </div>
                   </div>
-                  <Link
-                    href={`/track?id=${order.id}`}
-                    className="text-sm text-[#8B4513] hover:underline font-medium"
-                  >
-                    Track Order →
-                  </Link>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
 
       {toast && (
-        <div className="fixed bottom-6 right-6 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg text-sm z-50 animate-pulse">
+        <div style={{
+          position: 'fixed',
+          bottom: '1.5rem',
+          right: '1.5rem',
+          background: 'var(--color-natural-dark)',
+          color: 'white',
+          padding: '0.875rem 1.5rem',
+          borderRadius: 'var(--radius-md)',
+          boxShadow: 'var(--shadow-md)',
+          fontSize: 'var(--text-sm)',
+          zIndex: 50,
+          animation: 'bounce-once 0.5s ease forwards',
+        }}>
           {toast}
         </div>
       )}
 
       {cancelModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 relative">
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(59, 46, 36, 0.5)',
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem',
+        }}>
+          <div style={{
+            background: 'var(--color-white-warm)',
+            borderRadius: 'var(--radius-lg)',
+            maxWidth: '28rem',
+            width: '100%',
+            padding: '1.75rem',
+            position: 'relative',
+            boxShadow: 'var(--shadow-lg)',
+          }}>
             <button
               onClick={closeCancelModal}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                background: 'none',
+                border: 'none',
+                color: 'var(--color-text-muted)',
+                cursor: 'pointer',
+                padding: '0.25rem',
+              }}
             >
-              <X size={20} />
+              <X size={18} />
             </button>
 
-            <h2 className="font-display text-xl mb-4">
+            <h2 style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'var(--text-xl)',
+              color: 'var(--color-text-dark)',
+              marginBottom: '1.25rem',
+              letterSpacing: 'var(--tracking-tight)',
+            }}>
               Cancel Order #{cancelModal.id}
             </h2>
 
-            <label className="block text-sm font-medium mb-2">
+            <label style={{
+              display: 'block',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 500,
+              color: 'var(--color-text-dark)',
+              marginBottom: '0.5rem',
+            }}>
               Reason for cancellation
             </label>
             <select
-              className="input w-full mb-3"
+              className="input"
               value={cancelReason}
               onChange={(e) => setCancelReason(e.target.value)}
+              style={{ marginBottom: '0.75rem' }}
             >
               <option value="">Select a reason</option>
               {CANCEL_REASONS.map((r) => (
@@ -244,41 +402,50 @@ export default function OrdersPage() {
 
             {cancelReason === "Other" && (
               <textarea
-                className="input w-full mb-3"
+                className="input"
                 rows={3}
                 placeholder="Please tell us why..."
                 value={customReason}
                 onChange={(e) => setCustomReason(e.target.value)}
+                style={{ marginBottom: '0.75rem', resize: 'vertical' }}
               />
             )}
 
             {cancelError && (
-              <p className="text-red-600 text-sm mb-3">{cancelError}</p>
+              <p style={{ color: '#b91c1c', fontSize: 'var(--text-sm)', marginBottom: '0.75rem' }}>{cancelError}</p>
             )}
 
-            <div className="flex gap-3 justify-end">
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
               <button
                 onClick={closeCancelModal}
-                className="px-4 py-2 rounded-lg border border-gray-300 text-sm hover:bg-gray-50"
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--color-border-soft)',
+                  background: 'transparent',
+                  fontSize: 'var(--text-sm)',
+                  color: 'var(--color-text-dark)',
+                  cursor: 'pointer',
+                }}
               >
                 Keep Order
               </button>
               <button
                 onClick={handleCancel}
                 disabled={cancelling}
-                className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed"
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: 'var(--radius-md)',
+                  border: 'none',
+                  background: '#b91c1c',
+                  color: 'white',
+                  fontSize: 'var(--text-sm)',
+                  fontWeight: 600,
+                  cursor: cancelling ? 'not-allowed' : 'pointer',
+                  opacity: cancelling ? 0.6 : 1,
+                }}
               >
-                {cancelling ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Cancelling...
-                  </span>
-                ) : (
-                  "Yes, Cancel Order"
-                )}
+                {cancelling ? "Cancelling..." : "Yes, Cancel Order"}
               </button>
             </div>
           </div>

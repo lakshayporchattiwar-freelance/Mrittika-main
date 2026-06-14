@@ -171,23 +171,28 @@
   width: 100%;
   padding: 0.875rem;
   border: none;
-  border-radius: 0.625rem;
-  background: var(--color-primary);
-  color: white;
+  border-radius: var(--radius-full);
+  background: var(--color-cta);
+  color: var(--color-text-dark);
   font-family: var(--font-body);
   font-size: var(--text-base);
   font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.1s ease;
+  transition: all 0.3s var(--ease-out);
   margin-top: 1.5rem;
+  box-shadow: var(--shadow-cta);
 }
 
 .primaryBtn:hover {
-  background: var(--color-primary-dark);
+  background: var(--color-cta-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(232, 169, 126, 0.5);
 }
 
 .primaryBtn:active {
-  transform: scale(0.98);
+  transform: scale(0.95);
 }
 
 .primaryBtn:disabled {
