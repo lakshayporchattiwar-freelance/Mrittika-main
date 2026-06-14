@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { saveOrder, updateOrder } from '@/lib/orderStore';
 import { createShiprocketOrder } from '@/lib/shiprocket';
 import { sendOrderConfirmationEmail } from '@/lib/notifications';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function POST(req: NextRequest) {
   console.log('[COD] COD order started');
@@ -62,9 +63,19 @@ export async function POST(req: NextRequest) {
       courierName: shiprocketResult.courierName,
     });
 
+    await supabaseAdmin!
+      .from('orders')
+      .update({ shiprocket_sync_status: 'success', shiprocket_error: null })
+      .eq('id', orderId);
+
     finalOrderRecord = { ...finalOrderRecord, status: 'Processing', ...shiprocketResult };
   } catch (shiprocketError: any) {
-    console.error('[COD] Shiprocket failed (non-blocking):', shiprocketError.message);
+    console.error('[COD] SHIPROCKET FAILED:', shiprocketError.message);
+
+    await supabaseAdmin!
+      .from('orders')
+      .update({ shiprocket_sync_status: 'failed', shiprocket_error: shiprocketError.message })
+      .eq('id', orderId);
   }
 
   try {
