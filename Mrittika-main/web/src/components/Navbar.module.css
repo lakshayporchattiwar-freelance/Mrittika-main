@@ -127,7 +127,6 @@
   color: var(--color-text-dark);
   cursor: pointer;
   text-decoration: none;
-  overflow: hidden;
   transition: all var(--duration-normal) var(--ease-out);
 }
 
