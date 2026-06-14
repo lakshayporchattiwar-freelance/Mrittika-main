@@ -13,9 +13,11 @@
     "@vercel/analytics": "^2.0.1",
     "lucide-react": "^1.17.0",
     "next": "16.2.6",
+    "pg": "^8.21.0",
     "razorpay": "^2.9.6",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "resend": "^6.12.4",
     "uuid": "^14.0.0"
   },
   "devDependencies": {

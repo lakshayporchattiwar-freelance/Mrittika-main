@@ -19,32 +19,6 @@ export interface CustomerInfo {
   country: string;
 }
 
-export interface CancellationRecord {
-  orderId: string;
-  reason: string;
-  requestedAt: string;
-  status: "Pending" | "Approved" | "Refund Initiated" | "Refunded" | "Rejected";
-  refundId?: string;
-  refundAmount?: number;
-}
-
-export interface OrderRecord {
-  id: string;
-  razorpayOrderId: string;
-  razorpayPaymentId?: string;
-  shiprocketOrderId?: number;
-  shiprocketShipmentId?: number;
-  awbNumber?: string;
-  items: CartItem[];
-  customer: CustomerInfo;
-  total: number;
-  paymentMethod: "Prepaid" | "COD";
-  status: string;
-  createdAt: string;
-  cancellation?: CancellationRecord;
-  cancelledAt?: string;
-}
-
 export interface TrackingStatus {
   awb: string;
   currentStatus: string;

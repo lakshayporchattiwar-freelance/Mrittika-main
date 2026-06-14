@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
 
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
   if (!keySecret) {
-    console.error('[RAZORPAY-VERIFY] RAZORPAY_KEY_SECRET is not set in environment');
+    console.error('[RAZORPAY-VERIFY] RAZORPAY_KEY_SECRET is not set');
     return NextResponse.json(
       { error: 'Server configuration error' },
       { status: 500 }
@@ -19,7 +19,6 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch (e) {
-    console.error('[RAZORPAY-VERIFY] Failed to parse request body:', e);
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
@@ -30,7 +29,6 @@ export async function POST(req: NextRequest) {
   };
 
   if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
-    console.error('[RAZORPAY-VERIFY] Missing payment details');
     return NextResponse.json({ error: 'Missing payment details' }, { status: 400 });
   }
 
@@ -39,12 +37,6 @@ export async function POST(req: NextRequest) {
       .createHmac('sha256', keySecret)
       .update(`${razorpayOrderId}|${razorpayPaymentId}`)
       .digest('hex');
-
-    console.log('[RAZORPAY-VERIFY] Signature comparison:', {
-      expected: expectedSignature.substring(0, 10) + '...',
-      received: razorpaySignature.substring(0, 10) + '...',
-      match: expectedSignature === razorpaySignature,
-    });
 
     if (expectedSignature !== razorpaySignature) {
       console.error('[RAZORPAY-VERIFY] Signature mismatch');
@@ -67,9 +59,11 @@ export async function POST(req: NextRequest) {
     try {
       const shiprocketResult = await createShiprocketOrder(order);
       await updateOrder(order.id, {
+        status: 'Processing',
         shiprocketOrderId: shiprocketResult.shiprocketOrderId,
         shiprocketShipmentId: shiprocketResult.shipmentId,
-        status: 'Processing',
+        awbNumber: shiprocketResult.awbNumber,
+        courierName: shiprocketResult.courierName,
       });
       console.log('[RAZORPAY-VERIFY] Shiprocket order created:', shiprocketResult.shiprocketOrderId);
     } catch (shiprocketError) {
@@ -82,7 +76,6 @@ export async function POST(req: NextRequest) {
       orderId: order.id,
       status: 'Payment Verified',
     });
-
   } catch (error) {
     console.error('[RAZORPAY-VERIFY] Unexpected error:', error);
     return NextResponse.json(

@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { saveOrder, updateOrder } from '@/lib/orderStore';
+import { createShiprocketOrder } from '@/lib/shiprocket';
+import { sendOrderConfirmationEmail } from '@/lib/notifications';
 
 export async function POST(req: NextRequest) {
   console.log('[VERIFY] Payment verification started');
@@ -7,19 +10,8 @@ export async function POST(req: NextRequest) {
   let body: any;
   try {
     body = await req.json();
-    console.log('[VERIFY] Body received:', {
-      hasOrderId: !!body.razorpay_order_id,
-      hasPaymentId: !!body.razorpay_payment_id,
-      hasSignature: !!body.razorpay_signature,
-      hasOrderData: !!body.orderData,
-      hasInternalOrderId: !!body.internalOrderId,
-    });
   } catch (e) {
-    console.error('[VERIFY] Failed to parse request body:', e);
-    return NextResponse.json(
-      { success: false, error: 'Invalid request body' },
-      { status: 400 }
-    );
+    return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 });
   }
 
   const {
@@ -31,96 +23,85 @@ export async function POST(req: NextRequest) {
   } = body;
 
   if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-    console.error('[VERIFY] Missing Razorpay fields', {
-      razorpay_order_id,
-      razorpay_payment_id,
-      hasSignature: !!razorpay_signature,
-    });
-    return NextResponse.json(
-      { success: false, error: 'Missing payment fields' },
-      { status: 400 }
-    );
+    return NextResponse.json({ success: false, error: 'Missing payment fields' }, { status: 400 });
   }
 
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
   if (!keySecret) {
-    console.error('[VERIFY] RAZORPAY_KEY_SECRET is not set in environment');
-    return NextResponse.json(
-      { success: false, error: 'Server configuration error' },
-      { status: 500 }
-    );
+    console.error('[VERIFY] RAZORPAY_KEY_SECRET not set');
+    return NextResponse.json({ success: false, error: 'Server configuration error' }, { status: 500 });
+  }
+
+  const expectedSignature = crypto
+    .createHmac('sha256', keySecret)
+    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+    .digest('hex');
+
+  if (expectedSignature !== razorpay_signature) {
+    console.error('[VERIFY] Signature mismatch');
+    return NextResponse.json({ success: false, error: 'Payment verification failed' }, { status: 400 });
+  }
+
+  console.log('[VERIFY] Signature verified ✓');
+
+  const orderId = internalOrderId || `MRT-${Date.now()}`;
+
+  const orderRecord = {
+    id: orderId,
+    razorpayOrderId: razorpay_order_id,
+    razorpayPaymentId: razorpay_payment_id,
+    paymentMethod: 'Prepaid',
+    items: orderData?.items || [],
+    customer: orderData?.customer || {},
+    total: orderData?.total || 0,
+    status: 'Order Confirmed',
+    createdAt: new Date().toISOString(),
+  };
+
+  try {
+    await saveOrder(orderRecord);
+    console.log('[VERIFY] Order saved to Supabase ✓', orderId);
+  } catch (saveError: any) {
+    console.error('[VERIFY] Supabase save failed:', saveError.message);
+    return NextResponse.json({
+      success: false,
+      error: 'Order could not be saved. Please contact support with payment ID: ' + razorpay_payment_id,
+    }, { status: 500 });
+  }
+
+  let finalOrderRecord = { ...orderRecord };
+
+  try {
+    const shiprocketResult = await createShiprocketOrder(orderRecord);
+    console.log('[VERIFY] Shiprocket order created ✓', shiprocketResult.shiprocketOrderId);
+
+    await updateOrder(orderId, {
+      status: 'Processing',
+      shiprocketOrderId: shiprocketResult.shiprocketOrderId,
+      shiprocketShipmentId: shiprocketResult.shipmentId,
+      awbNumber: shiprocketResult.awbNumber,
+      courierName: shiprocketResult.courierName,
+    });
+
+    finalOrderRecord = {
+      ...finalOrderRecord,
+      status: 'Processing',
+      ...shiprocketResult,
+    };
+  } catch (shiprocketError: any) {
+    console.error('[VERIFY] Shiprocket failed (non-blocking):', shiprocketError.message);
   }
 
   try {
-    const expectedSignature = crypto
-      .createHmac('sha256', keySecret)
-      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-      .digest('hex');
-
-    console.log('[VERIFY] Signature comparison:', {
-      expected: expectedSignature.substring(0, 10) + '...',
-      received: razorpay_signature.substring(0, 10) + '...',
-      match: expectedSignature === razorpay_signature,
-    });
-
-    if (expectedSignature !== razorpay_signature) {
-      console.error('[VERIFY] Signature mismatch — possible key mismatch or tampered payload');
-      return NextResponse.json(
-        { success: false, error: 'Payment verification failed' },
-        { status: 400 }
-      );
-    }
-
-    console.log('[VERIFY] Signature verified successfully');
-
-    const orderId = internalOrderId || `MRT-${Date.now()}`;
-
-    try {
-      const { createShiprocketOrder } = await import('@/lib/shiprocket');
-      const { saveOrder, updateOrder } = await import('@/lib/orderStore');
-
-      const orderRecord: import('@/lib/types').OrderRecord = {
-        id: orderId,
-        razorpayOrderId: razorpay_order_id,
-        razorpayPaymentId: razorpay_payment_id,
-        items: orderData?.items || [],
-        customer: orderData?.customer || ({} as import('@/lib/types').CustomerInfo),
-        total: orderData?.total || 0,
-        paymentMethod: 'Prepaid',
-        status: 'Order Confirmed',
-        createdAt: new Date().toISOString(),
-      };
-
-      await saveOrder(orderRecord);
-      console.log('[VERIFY] Order saved:', orderId);
-
-      try {
-        const shiprocketResult = await createShiprocketOrder(orderRecord);
-        await updateOrder(orderId, {
-          shiprocketOrderId: shiprocketResult.shiprocketOrderId,
-          shiprocketShipmentId: shiprocketResult.shipmentId,
-          status: 'Processing',
-        });
-        console.log('[VERIFY] Shiprocket order created:', shiprocketResult.shiprocketOrderId);
-      } catch (shiprocketError) {
-        console.error('[VERIFY] Shiprocket failed (non-blocking):', shiprocketError);
-      }
-
-    } catch (orderError) {
-      console.error('[VERIFY] Order save failed (non-blocking):', orderError);
-    }
-
-    return NextResponse.json({
-      success: true,
-      orderId,
-      message: 'Payment verified successfully',
-    });
-
-  } catch (err) {
-    console.error('[VERIFY] Unexpected error during verification:', err);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error during verification' },
-      { status: 500 }
-    );
+    await sendOrderConfirmationEmail(finalOrderRecord);
+    console.log('[VERIFY] Confirmation email sent ✓');
+  } catch (emailError: any) {
+    console.error('[VERIFY] Email failed (non-blocking):', emailError.message);
   }
+
+  return NextResponse.json({
+    success: true,
+    orderId,
+    message: 'Order placed successfully',
+  });
 }

@@ -383,11 +383,11 @@ export default function CheckoutPage() {
                   </div>
                   <div className={styles.confirmRow}>
                     <span className={styles.confirmLabel}>Phone</span>
-                    <span className={styles.confirmValue}>6000386664</span>
+                    <span className={styles.confirmValue}>{customerInfo.phone}</span>
                   </div>
                   <div className={styles.confirmRow}>
                     <span className={styles.confirmLabel}>Email</span>
-                    <span className={styles.confirmValue}>mrittikaskinrituals@gmail.com</span>
+                    <span className={styles.confirmValue}>{customerInfo.email}</span>
                   </div>
                 </div>
 

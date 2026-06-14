@@ -4,7 +4,7 @@ import { updateOrder } from "@/lib/orderStore";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { shipment_id, order_id, awb, current_status } = body as {
+    const { order_id, shipment_id, awb, current_status } = body as {
       shipment_id?: number;
       order_id?: string;
       awb?: string;
@@ -30,11 +30,10 @@ export async function POST(request: Request) {
 
     const mappedStatus = current_status ? (statusMap[current_status] ?? current_status) : undefined;
 
-    const updates: Partial<import("@/lib/types").OrderRecord> = {};
-    if (awb) updates.awbNumber = awb;
-    if (mappedStatus) updates.status = mappedStatus;
-
     if (order_id) {
+      const updates: any = {};
+      if (awb) updates.awbNumber = awb;
+      if (mappedStatus) updates.status = mappedStatus;
       await updateOrder(order_id, updates);
     } else {
       console.log(`Shiprocket webhook for shipment ${shipment_id}: status=${current_status}, awb=${awb}`);

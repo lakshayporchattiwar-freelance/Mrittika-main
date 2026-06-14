@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getOrderById } from "@/lib/orderStore";
 import { trackShiprocketOrder } from "@/lib/shiprocket";
-import type { TrackingStatus } from "@/lib/types";
 
 export async function GET(request: Request) {
   try {
@@ -17,7 +16,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    const result: { order: typeof order; tracking?: TrackingStatus } = { order };
+    const result: any = { order };
 
     if (order.awbNumber) {
       try {

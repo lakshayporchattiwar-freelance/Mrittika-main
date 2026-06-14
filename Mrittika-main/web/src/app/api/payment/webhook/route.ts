@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import crypto from "crypto";
-import { updateOrder, getOrderByRazorpayOrderId, getAllOrders } from "@/lib/orderStore";
+import { updateOrder, getOrderByRazorpayOrderId, getOrderByRazorpayPaymentId } from "@/lib/orderStore";
 
 export async function POST(request: Request) {
   try {
@@ -13,6 +12,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Not configured" }, { status: 500 });
     }
 
+    const crypto = await import("crypto");
     const expectedSig = crypto
       .createHmac("sha256", secret)
       .update(rawBody)
@@ -55,15 +55,13 @@ export async function POST(request: Request) {
       const refundEntity = body.payload?.refund?.entity;
       if (refundEntity) {
         const paymentId = refundEntity.payment_id;
-        const refundId = refundEntity.id;
-        const allOrders = await getAllOrders();
-        const order = allOrders.find((o) => o.razorpayPaymentId === paymentId);
+        const order = await getOrderByRazorpayPaymentId(paymentId);
         if (order && order.cancellation) {
           await updateOrder(order.id, {
             cancellation: {
               ...order.cancellation,
               status: "Refunded",
-              refundId,
+              refundId: refundEntity.id,
             },
           });
         }

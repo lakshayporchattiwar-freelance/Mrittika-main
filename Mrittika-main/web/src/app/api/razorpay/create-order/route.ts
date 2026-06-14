@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { v4 as uuidv4 } from 'uuid';
-import { saveOrder } from '@/lib/orderStore';
+import { saveOrder, updateOrder } from '@/lib/orderStore';
+import { createShiprocketOrder } from '@/lib/shiprocket';
+import { sendOrderConfirmationEmail } from '@/lib/notifications';
 import Razorpay from 'razorpay';
-import type { CartItem, CustomerInfo } from '@/lib/types';
+import type { OrderItem, CustomerInfo } from '@/lib/orderStore';
 
 export async function POST(req: NextRequest) {
   console.log('[RAZORPAY-CREATE] Starting order creation');
@@ -11,10 +12,7 @@ export async function POST(req: NextRequest) {
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
   if (!keyId || !keySecret) {
-    console.error('[RAZORPAY-CREATE] Missing Razorpay credentials:', {
-      hasKeyId: !!keyId,
-      hasKeySecret: !!keySecret,
-    });
+    console.error('[RAZORPAY-CREATE] Missing Razorpay credentials');
     return NextResponse.json({ error: 'Razorpay not configured' }, { status: 500 });
   }
 
@@ -27,18 +25,17 @@ export async function POST(req: NextRequest) {
 
   const { amount, items, customer, paymentMethod } = body as {
     amount: number;
-    items: CartItem[];
+    items: OrderItem[];
     customer: CustomerInfo;
     paymentMethod: 'Prepaid' | 'COD';
   };
 
   if (!amount || !items?.length || !customer) {
-    console.error('[RAZORPAY-CREATE] Missing required fields');
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
   try {
-    const orderId = `MRT-${uuidv4().split('-')[0].toUpperCase()}`;
+    const orderId = `MRT-${Date.now()}`;
     const receipt = `rcpt_${orderId}`;
 
     const razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
@@ -59,15 +56,32 @@ export async function POST(req: NextRequest) {
     const orderRecord = {
       id: orderId,
       razorpayOrderId: razorpayOrder.id,
+      paymentMethod: paymentMethod || 'Prepaid',
       items,
       customer,
       total: amount,
-      paymentMethod,
       status: 'Order Confirmed',
       createdAt: new Date().toISOString(),
     };
 
     await saveOrder(orderRecord);
+
+    try {
+      const shiprocketResult = await createShiprocketOrder(orderRecord);
+      await updateOrder(orderId, {
+        status: 'Processing',
+        shiprocketOrderId: shiprocketResult.shiprocketOrderId,
+        shiprocketShipmentId: shiprocketResult.shipmentId,
+        awbNumber: shiprocketResult.awbNumber,
+        courierName: shiprocketResult.courierName,
+      });
+    } catch (shiprocketError) {
+      console.error('[RAZORPAY-CREATE] Shiprocket failed (non-blocking):', shiprocketError);
+    }
+
+    sendOrderConfirmationEmail(orderRecord).catch((err) =>
+      console.error('[RAZORPAY-CREATE] Email send failed (non-blocking):', err)
+    );
 
     return NextResponse.json({
       orderId,

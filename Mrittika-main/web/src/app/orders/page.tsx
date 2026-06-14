@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Package, X } from "lucide-react";
-import type { OrderRecord } from "@/lib/types";
+import type { OrderRecord } from "@/lib/orderStore";
 
 const STATUS_COLORS: Record<string, string> = {
   "Order Confirmed": "bg-gray-200 text-gray-700",
@@ -41,11 +41,6 @@ export default function OrdersPage() {
       // ignore
     }
 
-    const merged = new Map<string, OrderRecord>();
-    for (const o of localOrders) {
-      merged.set(o.id, o);
-    }
-    setOrders(Array.from(merged.values()));
     setMounted(true);
 
     fetch("/api/orders/list")
@@ -55,18 +50,18 @@ export default function OrdersPage() {
       })
       .then((data) => {
         const serverOrders: OrderRecord[] = data.orders ?? [];
-        const merged2 = new Map<string, OrderRecord>();
+        const merged = new Map<string, OrderRecord>();
         for (const o of [...localOrders, ...serverOrders]) {
-          if (!merged2.has(o.id)) merged2.set(o.id, o);
-          else merged2.set(o.id, { ...merged2.get(o.id)!, ...o });
+          if (!merged.has(o.id)) merged.set(o.id, o);
+          else merged.set(o.id, { ...merged.get(o.id)!, ...o });
         }
-        const sorted = Array.from(merged2.values()).sort(
+        const sorted = Array.from(merged.values()).sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         setOrders(sorted);
       })
       .catch(() => {
-        // server fetch failed — local orders already shown
+        setOrders(localOrders);
       });
   }, []);
 

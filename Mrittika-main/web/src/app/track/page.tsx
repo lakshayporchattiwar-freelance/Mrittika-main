@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { XCircle } from "lucide-react";
-import type { OrderRecord, TrackingStatus } from "@/lib/types";
+import type { OrderRecord } from "@/lib/orderStore";
 
 const STAGES = [
   "Order Confirmed",
@@ -17,11 +17,19 @@ const STAGES = [
 const STATUS_MAP: Record<string, number> = {
   "Order Confirmed": 0,
   "Payment Verified": 0,
+  "PICKUP PENDING": 0,
+  "ORDER PLACED": 0,
   Processing: 1,
+  "PICKUP GENERATED": 1,
+  "PICKUP SCHEDULED": 1,
   Shipped: 2,
   IN_TRANSIT: 2,
+  "IN TRANSIT": 2,
+  PICKED_UP: 2,
+  "PICKED UP": 2,
   "Out for Delivery": 3,
   OUT_FOR_DELIVERY: 3,
+  "OUT FOR DELIVERY": 3,
   Delivered: 4,
   DELIVERED: 4,
 };
@@ -30,43 +38,96 @@ function getStageIndex(status: string): number {
   return STATUS_MAP[status] ?? 0;
 }
 
+function normalizeStatus(raw: string): string {
+  const upper = raw.toUpperCase().trim();
+  for (const key of Object.keys(STATUS_MAP)) {
+    if (key.toUpperCase() === upper) return key;
+  }
+  return raw;
+}
+
+interface ShipmentActivity {
+  date: string;
+  activity: string;
+  location: string;
+}
+
+interface TrackingResponse {
+  success?: boolean;
+  trackingData?: any;
+  awb?: string;
+  status?: string;
+  message?: string;
+  error?: string;
+}
+
 function TrackContent() {
   const searchParams = useSearchParams();
   const initialId = searchParams.get("id") ?? "";
   const [query, setQuery] = useState(initialId);
   const [order, setOrder] = useState<OrderRecord | null>(null);
-  const [tracking, setTracking] = useState<TrackingStatus | null>(null);
+  const [activities, setActivities] = useState<ShipmentActivity[]>([]);
+  const [trackingMessage, setTrackingMessage] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [copyMsg, setCopyMsg] = useState("");
 
   const fetchOrder = useCallback(async (id: string) => {
     setLoading(true);
+    setTrackingMessage(null);
+    setActivities([]);
     try {
       const res = await fetch(`/api/orders/${id}`);
       if (!res.ok) {
         setOrder(null);
-        setTracking(null);
       } else {
         const data: OrderRecord = await res.json();
         setOrder(data);
-        if (data.status === "Cancelled" || !data.awbNumber) {
-          setTracking(null);
+
+        if (data.status === "Cancelled") {
+          setTrackingMessage(null);
+          setActivities([]);
         } else {
           try {
-            const trackRes = await fetch(`/api/shipping/track?awb=${data.awbNumber}`);
+            const trackRes = await fetch(`/api/shipping/track?orderId=${id}`);
             if (trackRes.ok) {
-              const trackData: TrackingStatus = await trackRes.json();
-              setTracking(trackData);
+              const trackData: TrackingResponse = await trackRes.json();
+
+              if (trackData.message && !trackData.trackingData) {
+                setTrackingMessage(trackData.message);
+                setActivities([]);
+              } else if (trackData.trackingData) {
+                const td = trackData.trackingData;
+                const shipStatus = td.current_status || td.current_status_name || td.status || "";
+                const normalized = normalizeStatus(shipStatus);
+
+                if (STATUS_MAP[normalized] !== undefined) {
+                  setOrder((prev) => prev ? { ...prev, status: normalized } : prev);
+                }
+
+                if (trackData.awb && !data.awbNumber) {
+                  setOrder((prev) => prev ? { ...prev, awbNumber: trackData.awb } : prev);
+                }
+
+                const rawActivities = td.shipment_track_activities || td.activities || [];
+                setActivities(
+                  rawActivities.map((a: any) => ({
+                    date: a.date || a.activity_date || "",
+                    activity: a.activity || a.status || "",
+                    location: a.location || a.city || "",
+                  }))
+                );
+                setTrackingMessage(null);
+              }
             }
           } catch {
-            setTracking(null);
+            setTrackingMessage(null);
+            setActivities([]);
           }
         }
       }
     } catch {
       setOrder(null);
-      setTracking(null);
     }
     setSearched(true);
     setLoading(false);
@@ -206,6 +267,12 @@ function TrackContent() {
               </div>
             ) : (
               <>
+                {trackingMessage && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm text-blue-700">{trackingMessage}</p>
+                  </div>
+                )}
+
                 <div className="relative pl-8">
                   {STAGES.map((stage, index) => {
                     const isCompleted = index <= currentStage;
@@ -253,11 +320,11 @@ function TrackContent() {
                   })}
                 </div>
 
-                {tracking && tracking.shipmentTrackActivities.length > 0 && (
+                {activities.length > 0 && (
                   <div className="bg-[var(--color-white-warm)] rounded-lg p-6">
                     <h3 className="font-display text-lg mb-4">Shipment Activity</h3>
                     <div className="space-y-3">
-                      {tracking.shipmentTrackActivities.map((a, i) => (
+                      {activities.map((a, i) => (
                         <div key={i} className="flex gap-4 text-sm border-b border-gray-100 pb-3 last:border-0">
                           <span className="text-[var(--color-text-muted)] min-w-[100px]">{a.date}</span>
                           <span className="flex-1">{a.activity}</span>

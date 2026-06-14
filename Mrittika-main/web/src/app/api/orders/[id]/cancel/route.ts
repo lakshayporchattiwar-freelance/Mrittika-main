@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { getOrderById, updateOrder } from "@/lib/orderStore";
 import { getRazorpayInstance } from "@/lib/razorpay";
 import { getShiprocketToken } from "@/lib/shiprocket";
-import type { CancellationRecord } from "@/lib/types";
+import { sendOrderCancelledEmail } from "@/lib/notifications";
+import type { CancellationRecord } from "@/lib/orderStore";
 
 export async function POST(
   request: Request,
@@ -10,7 +11,7 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const { reason } = await request.json() as { reason: string };
+    const { reason } = (await request.json()) as { reason: string };
 
     if (!reason) {
       return NextResponse.json(
@@ -78,7 +79,6 @@ export async function POST(
       }
     }
 
-    let refundInitiated = false;
     let refundId: string | undefined;
     let cancellationStatus: CancellationRecord["status"] = "Pending";
 
@@ -94,7 +94,6 @@ export async function POST(
           }
         );
         refundId = refund.id as string;
-        refundInitiated = true;
         cancellationStatus = "Refund Initiated";
       } catch (refundError) {
         console.error("Razorpay refund failed (manual review needed):", refundError);
@@ -116,6 +115,12 @@ export async function POST(
       cancelledAt: new Date().toISOString(),
       cancellation,
     });
+
+    const cancelledOrder = { ...order, status: "Cancelled", cancellation, cancelledAt: new Date().toISOString() };
+
+    sendOrderCancelledEmail(cancelledOrder).catch((err) =>
+      console.error("[CANCEL] Email send failed (non-blocking):", err)
+    );
 
     const isPrepaid = order.paymentMethod === "Prepaid";
 
