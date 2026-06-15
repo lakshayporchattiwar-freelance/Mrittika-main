@@ -1,141 +1,165 @@
-import { NextResponse } from "next/server";
-import { getOrderById, updateOrder } from "@/lib/orderStore";
-import { getRazorpayInstance } from "@/lib/razorpay";
-import { getShiprocketToken } from "@/lib/shiprocket";
-import { sendOrderCancelledEmail } from "@/lib/notifications";
-import type { CancellationRecord } from "@/lib/orderStore";
+import { NextRequest, NextResponse } from 'next/server';
+import { getOrderById } from '@/lib/orderStore';
+import { cancelShiprocketOrder } from '@/lib/shiprocket';
+import { refundRazorpayPayment } from '@/lib/razorpay';
+import { supabaseAdmin } from '@/lib/supabase';
+import { sendOrderCancellationEmail } from '@/lib/notifications';
 
 export async function POST(
-  request: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id: orderId } = await params;
+  console.log('[CANCEL] Cancellation requested for order:', orderId);
+
+  let body: any = {};
   try {
-    const { id } = await params;
-    const { reason } = (await request.json()) as { reason: string };
+    body = await req.json();
+  } catch (e) {
+    // body is optional, reason may be empty
+  }
 
-    if (!reason) {
-      return NextResponse.json(
-        { success: false, error: "Reason is required" },
-        { status: 400 }
-      );
-    }
+  const reason = body.reason || 'No reason provided';
 
-    const order = await getOrderById(id);
-    if (!order) {
-      return NextResponse.json(
-        { success: false, error: "Order not found" },
-        { status: 404 }
-      );
-    }
+  const order = await getOrderById(orderId);
 
-    const hoursSinceOrder =
-      (Date.now() - new Date(order.createdAt).getTime()) / (1000 * 60 * 60);
-    if (hoursSinceOrder > 24) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Cancellation window has closed. Orders can only be cancelled within 24 hours of placement. Contact us on WhatsApp 6000386664 for help.",
-        },
-        { status: 400 }
-      );
-    }
-
-    if (
-      order.status === "Delivered" ||
-      order.status === "Out for Delivery" ||
-      order.status === "Cancelled"
-    ) {
-      return NextResponse.json(
-        { success: false, error: "Order cannot be cancelled at this stage" },
-        { status: 400 }
-      );
-    }
-
-    if (order.status === "Shipped") {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Order has already been shipped. Please refuse delivery or contact support on WhatsApp 6000386664.",
-        },
-        { status: 400 }
-      );
-    }
-
-    if (order.shiprocketOrderId) {
-      try {
-        const token = await getShiprocketToken();
-        await fetch("https://apiv2.shiprocket.in/v1/external/orders/cancel", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ ids: [order.shiprocketOrderId] }),
-        });
-      } catch (shiprocketError) {
-        console.error("Shiprocket cancellation failed (continuing anyway):", shiprocketError);
-      }
-    }
-
-    let refundId: string | undefined;
-    let cancellationStatus: CancellationRecord["status"] = "Pending";
-
-    if (order.paymentMethod === "Prepaid" && order.razorpayPaymentId) {
-      try {
-        const razorpay = getRazorpayInstance();
-        const refund = await razorpay.payments.refund(
-          order.razorpayPaymentId,
-          {
-            amount: order.total * 100,
-            speed: "normal",
-            notes: { reason, orderId: id },
-          }
-        );
-        refundId = refund.id as string;
-        cancellationStatus = "Refund Initiated";
-      } catch (refundError) {
-        console.error("Razorpay refund failed (manual review needed):", refundError);
-        cancellationStatus = "Pending";
-      }
-    }
-
-    const cancellation: CancellationRecord = {
-      orderId: id,
-      reason,
-      requestedAt: new Date().toISOString(),
-      status: cancellationStatus,
-      refundId,
-      refundAmount: order.total,
-    };
-
-    await updateOrder(id, {
-      status: "Cancelled",
-      cancelledAt: new Date().toISOString(),
-      cancellation,
-    });
-
-    const cancelledOrder = { ...order, status: "Cancelled", cancellation, cancelledAt: new Date().toISOString() };
-
-    sendOrderCancelledEmail(cancelledOrder).catch((err) =>
-      console.error("[CANCEL] Email send failed (non-blocking):", err)
-    );
-
-    const isPrepaid = order.paymentMethod === "Prepaid";
-
-    return NextResponse.json({
-      success: true,
-      message: isPrepaid
-        ? `Order cancelled. Refund of ₹${order.total} will be credited in 5-7 business days.`
-        : "Order cancelled successfully.",
-      cancellation,
-    });
-  } catch (error) {
-    console.error("Order cancellation error:", error);
+  if (!order) {
     return NextResponse.json(
-      { success: false, error: "Cancellation failed. Contact support." },
+      { success: false, error: 'Order not found' },
+      { status: 404 }
+    );
+  }
+
+  if (order.status === 'Cancelled') {
+    return NextResponse.json(
+      { success: false, error: 'This order is already cancelled' },
+      { status: 400 }
+    );
+  }
+
+  if (order.status === 'Delivered' || order.status === 'Out for Delivery') {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'This order cannot be cancelled at this stage. Please refuse the delivery or contact us on WhatsApp 6000386664 for a return.',
+      },
+      { status: 400 }
+    );
+  }
+
+  if (order.status === 'Shipped') {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'This order has already been shipped. Please refuse the delivery or contact us on WhatsApp 6000386664 for a return.',
+      },
+      { status: 400 }
+    );
+  }
+
+  const orderAgeMs = Date.now() - new Date(order.createdAt).getTime();
+  const twentyFourHoursMs = 24 * 60 * 60 * 1000;
+
+  if (orderAgeMs > twentyFourHoursMs) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Cancellation window has closed. Orders can only be cancelled within 24 hours of placement. Contact us on WhatsApp 6000386664 for help.',
+      },
+      { status: 400 }
+    );
+  }
+
+  let shiprocketCancelStatus = 'not_applicable';
+  let shiprocketMessage = '';
+
+  if (order.shiprocketOrderId) {
+    try {
+      const result = await cancelShiprocketOrder(order.shiprocketOrderId);
+      shiprocketCancelStatus = result.success ? 'cancelled' : 'failed';
+      shiprocketMessage = result.message;
+      console.log('[CANCEL] Shiprocket result:', shiprocketCancelStatus, shiprocketMessage);
+    } catch (err: any) {
+      shiprocketCancelStatus = 'failed';
+      shiprocketMessage = err.message;
+      console.error('[CANCEL] Shiprocket cancel threw error:', err.message);
+    }
+  } else {
+    console.log('[CANCEL] No shiprocketOrderId on this order, skipping Shiprocket cancel');
+  }
+
+  let refundResult: { success: boolean; refundId?: string; message: string } | null = null;
+
+  if (order.paymentMethod === 'Prepaid' && order.razorpayPaymentId) {
+    refundResult = await refundRazorpayPayment(
+      order.razorpayPaymentId,
+      order.total,
+      reason
+    );
+    console.log('[CANCEL] Refund result:', refundResult);
+  } else {
+    console.log('[CANCEL] No refund needed (COD order or no payment ID)');
+  }
+
+  const dbUpdates: any = {
+    status: 'Cancelled',
+    cancellation_reason: reason,
+    cancelled_at: new Date().toISOString(),
+    shiprocket_cancel_status: shiprocketCancelStatus,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (refundResult) {
+    dbUpdates.refund_id = refundResult.refundId || null;
+    dbUpdates.refund_status = refundResult.success ? 'processing' : 'failed';
+    dbUpdates.refund_amount = order.total;
+  }
+
+  const { error: updateError } = await supabaseAdmin!
+    .from('orders')
+    .update(dbUpdates)
+    .eq('id', orderId);
+
+  if (updateError) {
+    console.error('[CANCEL] Failed to update order in Supabase:', updateError);
+    return NextResponse.json(
+      { success: false, error: 'Failed to record cancellation. Please contact support.' },
       { status: 500 }
     );
   }
+
+  try {
+    await sendOrderCancellationEmail(order, {
+      reason,
+      refundInitiated: refundResult?.success || false,
+      refundAmount: order.paymentMethod === 'Prepaid' ? order.total : undefined,
+      shiprocketCancelStatus,
+    });
+    console.log('[CANCEL] Cancellation emails sent');
+  } catch (emailError: any) {
+    console.error('[CANCEL] Cancellation email failed (non-blocking):', emailError.message);
+  }
+
+  let customerMessage = 'Your order has been cancelled.';
+
+  if (order.paymentMethod === 'Prepaid') {
+    if (refundResult?.success) {
+      customerMessage = `Your order has been cancelled. A refund of ₹${order.total} has been initiated and will reflect in your original payment method within 5-7 business days.`;
+    } else {
+      customerMessage = `Your order has been cancelled. There was an issue initiating your refund automatically — our team has been notified and will process your refund of ₹${order.total} manually within 5-7 business days. Contact us on WhatsApp 6000386664 if you don't see it.`;
+    }
+  } else {
+    customerMessage = 'Your COD order has been cancelled successfully.';
+  }
+
+  if (shiprocketCancelStatus === 'failed' && order.shiprocketOrderId) {
+    console.warn('[CANCEL] Order marked cancelled in our system but Shiprocket cancel may need manual follow-up:', shiprocketMessage);
+  }
+
+  return NextResponse.json({
+    success: true,
+    message: customerMessage,
+    shiprocketCancelStatus,
+    refund: refundResult,
+  });
 }

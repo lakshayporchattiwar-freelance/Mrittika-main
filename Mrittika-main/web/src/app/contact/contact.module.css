@@ -28,6 +28,32 @@
   align-content: start;
 }
 
+.heroImage {
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.heroImageImg {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  display: block;
+}
+
+.error {
+  color: #b91c1c;
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
+.success {
+  color: var(--color-natural-dark);
+  font-size: var(--text-sm);
+  margin: 0;
+  font-weight: 500;
+}
+
 .whatsappLink {
   display: inline-flex;
   align-items: center;

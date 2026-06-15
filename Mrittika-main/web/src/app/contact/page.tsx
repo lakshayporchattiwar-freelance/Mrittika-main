@@ -1,23 +1,131 @@
+"use client";
+
+import { useState } from "react";
+import Image from "next/image";
 import styles from "./contact.module.css";
 
 export default function ContactPage() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    if (!name.trim() || !email.trim() || !message.trim()) {
+      setErrorMsg("Name, email, and message are required.");
+      return;
+    }
+
+    if (!email.includes("@")) {
+      setErrorMsg("Please enter a valid email.");
+      return;
+    }
+
+    if (message.trim().length < 10) {
+      setErrorMsg("Message must be at least 10 characters.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          message: message.trim(),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setName("");
+        setEmail("");
+        setPhone("");
+        setMessage("");
+        setSuccessMsg("Thank you! We'll get back to you within 24 hours.");
+      } else {
+        setErrorMsg(data.error || "Something went wrong. Please try again.");
+      }
+    } catch {
+      setErrorMsg("Failed to send message. Please try WhatsApp instead.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <section className={`section ${styles.contact}`}>
       <div className="container">
         <div className={styles.grid}>
-          <form className={styles.form}>
+          <form className={styles.form} onSubmit={handleSubmit}>
             <h1>Contact Us</h1>
             <p className="text-muted">
               We&apos;d love to guide your skincare ritual.
             </p>
-            <input className="input" type="text" placeholder="Name" />
-            <input className="input" type="email" placeholder="Email" />
-            <input className="input" type="text" placeholder="Subject" />
-            <textarea className="input" rows={5} placeholder="Message" />
-            <button className="btn btn-primary">Send Message</button>
+            <input
+              className="input"
+              type="text"
+              placeholder="Name *"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <input
+              className="input"
+              type="email"
+              placeholder="Email *"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <input
+              className="input"
+              type="tel"
+              placeholder="Phone (optional)"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+            <textarea
+              className="input"
+              rows={5}
+              placeholder="Message * (min 10 characters)"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              required
+            />
+            {errorMsg && <p className={styles.error}>{errorMsg}</p>}
+            {successMsg && <p className={styles.success}>{successMsg}</p>}
+            <button
+              className="btn btn-primary"
+              type="submit"
+              disabled={submitting}
+            >
+              {submitting ? "Sending..." : "Send Message"}
+            </button>
           </form>
 
           <div className={styles.info}>
+            <div className={styles.heroImage}>
+              <Image
+                src="/images/contact-us.webp"
+                alt="Contact Mrittika"
+                width={600}
+                height={400}
+                className={styles.heroImageImg}
+              />
+            </div>
             <h2>Reach us directly</h2>
             <a
               href="https://wa.me/916000386664"
@@ -41,7 +149,6 @@ export default function ContactPage() {
             >
               Chat on WhatsApp
             </a>
-            <div className={styles.map} />
           </div>
         </div>
       </div>

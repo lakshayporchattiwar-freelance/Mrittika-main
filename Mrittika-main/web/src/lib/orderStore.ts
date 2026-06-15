@@ -38,6 +38,8 @@ export interface OrderRecord {
   items: OrderItem[];
   customer: CustomerInfo;
   total: number;
+  couponCode?: string | null;
+  discountAmount?: number;
   status: string;
   shiprocketOrderId?: string;
   shiprocketShipmentId?: string;
@@ -46,6 +48,11 @@ export interface OrderRecord {
   createdAt: string;
   cancellation?: CancellationRecord;
   cancelledAt?: string;
+  cancellationReason?: string;
+  refundId?: string;
+  refundStatus?: string;
+  refundAmount?: number;
+  shiprocketCancelStatus?: string;
 }
 
 function rowToOrderRecord(order: any): OrderRecord {
@@ -74,6 +81,8 @@ function rowToOrderRecord(order: any): OrderRecord {
       country: order.shipping_country || 'India',
     },
     total: order.total,
+    couponCode: order.coupon_code || undefined,
+    discountAmount: order.discount_amount || undefined,
     status: order.status,
     shiprocketOrderId: order.shiprocket_order_id,
     shiprocketShipmentId: order.shiprocket_shipment_id,
@@ -82,6 +91,11 @@ function rowToOrderRecord(order: any): OrderRecord {
     createdAt: order.created_at,
     cancellation: order.cancellation || undefined,
     cancelledAt: order.cancelled_at || undefined,
+    cancellationReason: order.cancellation_reason || undefined,
+    refundId: order.refund_id || undefined,
+    refundStatus: order.refund_status || undefined,
+    refundAmount: order.refund_amount || undefined,
+    shiprocketCancelStatus: order.shiprocket_cancel_status || undefined,
   };
 }
 
@@ -99,7 +113,11 @@ export async function saveOrder(order: OrderRecord): Promise<void> {
       subtotal: order.total,
       shipping_charge: 0,
       cod_charge: order.paymentMethod === 'COD' ? 49 : 0,
-      total: order.paymentMethod === 'COD' ? order.total + 49 : order.total,
+      total: order.paymentMethod === 'COD'
+        ? order.total - (order.discountAmount || 0) + 49
+        : order.total - (order.discountAmount || 0),
+      coupon_code: order.couponCode || null,
+      discount_amount: order.discountAmount || 0,
       customer_name: customerName,
       customer_email: order.customer.email,
       customer_phone: order.customer.phone,

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Script from 'next/script';
 import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
+import OrderButton from '@/components/OrderButton';
 import type { CustomerInfo } from '@/lib/types';
 
 declare global {
@@ -18,6 +19,8 @@ declare global {
 type RazorpayCheckoutProps = {
   customerInfo: CustomerInfo;
   total: number;
+  couponCode?: string | null;
+  discountAmount?: number;
   onSuccess?: (orderId: string) => void;
   onError?: (msg: string) => void;
 };
@@ -25,12 +28,15 @@ type RazorpayCheckoutProps = {
 export default function RazorpayCheckout({
   customerInfo,
   total,
+  couponCode,
+  discountAmount,
   onSuccess,
   onError,
 }: RazorpayCheckoutProps) {
   const [loading, setLoading] = useState(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
   const { items, clearCart } = useCart();
   const router = useRouter();
 
@@ -121,6 +127,8 @@ export default function RazorpayCheckout({
                   items,
                   customer: customerInfo,
                   total,
+                  couponCode: couponCode || null,
+                  discountAmount: discountAmount || 0,
                 },
               }),
             });
@@ -130,6 +138,8 @@ export default function RazorpayCheckout({
 
             if (verifyData.success) {
               clearCart();
+              setPaymentSuccess(true);
+
               const savedOrder = {
                 id: verifyData.orderId || internalOrderId,
                 razorpayOrderId: response.razorpay_order_id,
@@ -152,11 +162,21 @@ export default function RazorpayCheckout({
                 console.error('Failed to save order to localStorage:', e);
               }
 
-              if (onSuccess) {
-                onSuccess(verifyData.orderId || internalOrderId);
-              } else {
-                router.push(`/order-success?id=${verifyData.orderId || internalOrderId}`);
+              try {
+                localStorage.setItem('mrittika_customer_email', customerInfo.email.trim().toLowerCase());
+              } catch (e) {
+                console.error('Failed to save customer email:', e);
               }
+
+              const redirectId = verifyData.orderId || internalOrderId;
+
+              setTimeout(() => {
+                if (onSuccess) {
+                  onSuccess(redirectId);
+                } else {
+                  router.push(`/order-success?id=${redirectId}`);
+                }
+              }, 4000);
             } else {
               throw new Error(verifyData.error || 'Payment verification failed');
             }
@@ -226,24 +246,21 @@ export default function RazorpayCheckout({
         </div>
       )}
 
-      <button
-        onClick={handlePayment}
-        disabled={loading || !scriptLoaded}
-        className="btn btn-primary btn-lg"
-        style={{
-          width: '100%',
-          justifyContent: 'center',
-          opacity: loading || !scriptLoaded ? 0.6 : 1,
-          cursor: loading || !scriptLoaded ? 'not-allowed' : 'pointer',
-        }}
-      >
-        {!scriptLoaded
-          ? 'Loading payment...'
-          : loading
-          ? 'Processing...'
-          : `Pay ₹${total}`
-        }
-      </button>
+      {paymentSuccess ? (
+        <OrderButton
+          defaultText={`Pay ₹${total}`}
+          successText="Payment Successful"
+          animate={true}
+          disabled={true}
+        />
+      ) : (
+        <OrderButton
+          defaultText={!scriptLoaded ? 'Loading payment...' : loading ? 'Processing...' : `Pay ₹${total}`}
+          successText="Payment Successful"
+          onClick={handlePayment}
+          disabled={loading || !scriptLoaded}
+        />
+      )}
 
       <p style={{
         textAlign: 'center',

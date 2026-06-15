@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import RazorpayCheckout from "@/components/RazorpayCheckout";
+import OrderButton from "@/components/OrderButton";
 import type { CustomerInfo } from "@/lib/types";
 import styles from "./checkout.module.css";
 
@@ -22,7 +23,7 @@ const STATES = [
 type PaymentMethod = "upi" | "cod";
 
 export default function CheckoutPage() {
-  const { items, total: cartTotal, count } = useCart();
+  const { items, total: cartTotal, count, appliedCoupon } = useCart();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("upi");
@@ -49,7 +50,8 @@ export default function CheckoutPage() {
 
   const shipping = cartTotal >= 499 ? 0 : 49;
   const codCharge = paymentMethod === "cod" ? 49 : 0;
-  const grandTotal = cartTotal + shipping + codCharge;
+  const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+  const grandTotal = cartTotal - discountAmount + shipping + codCharge;
 
   const validateStep1 = (): boolean => {
     const e: Record<string, string> = {};
@@ -73,28 +75,37 @@ export default function CheckoutPage() {
     if (validateStep1()) setCurrentStep(2);
   };
 
+  const [codAnimating, setCodAnimating] = useState(false);
+
   const handleCODOrder = async () => {
-    setCodLoading(true);
+    setCodAnimating(true);
     setError(null);
     try {
       const res = await fetch("/api/payment/cod-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          orderData: { items, customer: customerInfo },
+          orderData: { items, customer: customerInfo, couponCode: appliedCoupon?.code || null, discountAmount },
           total: grandTotal,
         }),
       });
       const data = await res.json();
       if (data.success) {
-        router.push(`/order-success?id=${data.orderId}`);
+        try {
+          localStorage.setItem('mrittika_customer_email', customerInfo.email.trim().toLowerCase());
+        } catch (e) {
+          console.error('Failed to save customer email:', e);
+        }
+        setTimeout(() => {
+          router.push(`/order-success?id=${data.orderId}`);
+        }, 4000);
       } else {
         setError(data.error || "COD order failed");
+        setCodAnimating(false);
       }
     } catch {
       setError("Something went wrong. Please try again.");
-    } finally {
-      setCodLoading(false);
+      setCodAnimating(false);
     }
   };
 
@@ -339,13 +350,13 @@ export default function CheckoutPage() {
 
                 <div className={styles.btnRow}>
                   {paymentMethod === "cod" ? (
-                    <button
+                    <OrderButton
+                      defaultText={`Place COD Order — ₹${grandTotal}`}
+                      successText="Order Placed"
                       onClick={handleCODOrder}
-                      disabled={codLoading}
-                      className={styles.primaryBtn}
-                    >
-                      {codLoading ? "Placing Order..." : `Place COD Order — ₹${grandTotal}`}
-                    </button>
+                      disabled={codAnimating}
+                      animate={codAnimating}
+                    />
                   ) : (
                     <button
                       onClick={() => {
@@ -403,6 +414,8 @@ export default function CheckoutPage() {
                 <RazorpayCheckout
                   customerInfo={customerInfo}
                   total={grandTotal}
+                  couponCode={appliedCoupon?.code}
+                  discountAmount={appliedCoupon?.discountAmount}
                   onSuccess={handleRazorpaySuccess}
                   onError={handleRazorpayError}
                 />
@@ -433,6 +446,12 @@ export default function CheckoutPage() {
                 <span>Subtotal</span>
                 <span>₹{cartTotal}</span>
               </div>
+              {appliedCoupon && (
+                <div className={`${styles.summaryRow} ${styles.couponRow}`}>
+                  <span>Coupon ({appliedCoupon.code})</span>
+                  <span>-₹{discountAmount}</span>
+                </div>
+              )}
               <div className={styles.summaryRow}>
                 <span>Shipping</span>
                 <span className={shipping === 0 ? styles.freeShipping : ""}>

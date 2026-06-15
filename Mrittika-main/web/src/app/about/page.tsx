@@ -1,5 +1,6 @@
 import Image from "next/image";
 import styles from "./about.module.css";
+import AboutTimeline from "@/components/AboutTimeline";
 
 export default function AboutPage() {
   return (
@@ -13,21 +14,7 @@ export default function AboutPage() {
           </p>
         </div>
 
-        <div className={styles.timeline}>
-          {[
-            { year: "2021", text: "A family recipe inspires the first batch." },
-            { year: "2023", text: "Mrittika opens to the community." },
-            { year: "2025", text: "10,000+ rituals delivered across India." },
-          ].map((item) => (
-            <div key={item.year} className={styles.timelineItem}>
-              <div className={styles.timelineLine} />
-              <div className={styles.timelineContent}>
-                <span className={styles.timelineYear}>{item.year}</span>
-                <p>{item.text}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        <AboutTimeline />
 
         <div className={styles.values}>
           {[
@@ -44,13 +31,6 @@ export default function AboutPage() {
 
         <div className={styles.founder}>
           <div className={styles.founderMedia}>
-            <Image
-              src="/images/founder.svg"
-              alt="Charvi Kailash Khandar"
-              width={400}
-              height={480}
-              className={styles.founderImage}
-            />
             <video
               src="/founder/founder-video.webm"
               controls

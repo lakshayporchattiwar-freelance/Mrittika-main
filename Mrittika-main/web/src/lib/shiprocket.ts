@@ -215,6 +215,47 @@ export async function createShiprocketOrder(order: any): Promise<{
   return { shiprocketOrderId, shipmentId, awbNumber, courierName };
 }
 
+export async function cancelShiprocketOrder(shiprocketOrderId: string): Promise<{
+  success: boolean;
+  message: string;
+}> {
+  const token = await getShiprocketToken();
+
+  console.log('[SHIPROCKET] Cancelling order:', shiprocketOrderId);
+
+  const res = await fetch('https://apiv2.shiprocket.in/v1/external/orders/cancel', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ ids: [Number(shiprocketOrderId)] }),
+  });
+
+  const data = await res.json();
+  console.log('[SHIPROCKET] Cancel response:', JSON.stringify(data, null, 2));
+
+  if (!res.ok) {
+    return {
+      success: false,
+      message: `SHIPROCKET_CANCEL_FAILED: status=${res.status} response=${JSON.stringify(data)}`,
+    };
+  }
+
+  const responseMessage = data?.message || '';
+  const responseStatus = data?.status_code;
+
+  if (responseStatus === 200 || /cancel/i.test(responseMessage)) {
+    console.log('[SHIPROCKET] Order cancelled successfully:', shiprocketOrderId);
+    return { success: true, message: responseMessage || 'Order cancelled on Shiprocket' };
+  }
+
+  return {
+    success: false,
+    message: `SHIPROCKET_CANCEL_UNCLEAR: response=${JSON.stringify(data)}`,
+  };
+}
+
 export async function trackShiprocketOrder(awb: string): Promise<any> {
   const token = await getShiprocketToken();
 

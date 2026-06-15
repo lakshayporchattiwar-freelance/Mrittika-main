@@ -14,6 +14,40 @@ export function getRazorpayInstance(): Razorpay {
   return new Razorpay({ key_id: keyId, key_secret: keySecret });
 }
 
+export async function refundRazorpayPayment(
+  paymentId: string,
+  amountInRupees: number,
+  reason: string
+): Promise<{ success: boolean; refundId?: string; message: string }> {
+  try {
+    console.log('[RAZORPAY] Initiating refund for payment:', paymentId, 'amount:', amountInRupees);
+
+    const razorpay = getRazorpayInstance();
+    const refund = await razorpay.payments.refund(paymentId, {
+      amount: Math.round(amountInRupees * 100),
+      speed: 'normal',
+      notes: {
+        reason: reason,
+        refunded_via: 'Mrittika website cancellation',
+      },
+    });
+
+    console.log('[RAZORPAY] Refund created:', refund.id, 'status:', refund.status);
+
+    return {
+      success: true,
+      refundId: refund.id as string,
+      message: `Refund of ₹${amountInRupees} initiated. Status: ${refund.status}`,
+    };
+  } catch (err: any) {
+    console.error('[RAZORPAY] Refund failed:', err);
+    return {
+      success: false,
+      message: err.error?.description || err.message || 'Refund initiation failed',
+    };
+  }
+}
+
 export function verifyRazorpaySignature(
   razorpayOrderId: string,
   razorpayPaymentId: string,

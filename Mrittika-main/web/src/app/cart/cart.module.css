@@ -92,7 +92,49 @@
 
 .coupon {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-2);
+}
+
+.couponInput {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.couponInput .input {
+  flex: 1;
+}
+
+.couponInput .btn {
+  white-space: nowrap;
+}
+
+.couponError {
+  color: #b91c1c;
+  font-size: var(--text-xs);
+  margin: 0;
+}
+
+.couponSuccess {
+  color: var(--color-natural-dark);
+  font-size: var(--text-sm);
+  margin: 0;
+  font-weight: 500;
+}
+
+.couponRow {
+  color: var(--color-natural-dark);
+  font-size: var(--text-sm);
+}
+
+.removeCoupon {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  text-decoration: underline;
+  padding: 0;
+  margin-left: var(--space-1);
 }
 
 .payments {

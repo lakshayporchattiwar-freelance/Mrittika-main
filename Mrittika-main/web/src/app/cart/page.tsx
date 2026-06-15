@@ -8,11 +8,53 @@ import { useCart } from "@/context/CartContext";
 import styles from "./cart.module.css";
 
 export default function CartPage() {
-  const { items, removeItem, updateQty, total, mounted } = useCart();
+  const { items, removeItem, updateQty, total, mounted, appliedCoupon, setAppliedCoupon } = useCart();
   const router = useRouter();
   const [checkingOut, setCheckingOut] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponError, setCouponError] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+
   const shipping = total >= 499 ? 0 : 49;
-  const grandTotal = total + shipping;
+  const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+  const grandTotal = total - discountAmount + shipping;
+
+  async function handleApplyCoupon() {
+    const trimmed = couponCode.trim();
+    if (!trimmed) return;
+
+    setCouponLoading(true);
+    setCouponError("");
+
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: trimmed, subtotal: total }),
+      });
+      const data = await res.json();
+
+      if (data.valid) {
+        setAppliedCoupon({
+          code: data.code,
+          discountAmount: data.discountAmount,
+          message: data.message,
+        });
+        setCouponCode("");
+      } else {
+        setCouponError(data.error || "Invalid coupon code");
+      }
+    } catch {
+      setCouponError("Failed to validate coupon. Please try again.");
+    } finally {
+      setCouponLoading(false);
+    }
+  }
+
+  function handleRemoveCoupon() {
+    setAppliedCoupon(null);
+    setCouponError("");
+  }
 
   if (!mounted) {
     return (
@@ -72,6 +114,12 @@ export default function CartPage() {
                 <span>Subtotal</span>
                 <span>₹{total}</span>
               </div>
+              {appliedCoupon && (
+                <div className={`${styles.row} ${styles.couponRow}`}>
+                  <span>Coupon ({appliedCoupon.code}) <button className={styles.removeCoupon} onClick={handleRemoveCoupon}>Remove</button></span>
+                  <span>-₹{discountAmount}</span>
+                </div>
+              )}
               <div className={styles.row}>
                 <span>Shipping</span>
                 <span>{shipping === 0 ? "Free" : `₹${shipping}`}</span>
@@ -80,10 +128,30 @@ export default function CartPage() {
                 <span>Total</span>
                 <span>₹{grandTotal}</span>
               </div>
-              <div className={styles.coupon}>
-                <input className="input" placeholder="Coupon code" />
-                <button className="btn btn-ghost">Apply</button>
-              </div>
+              {!appliedCoupon && (
+                <div className={styles.coupon}>
+                  <div className={styles.couponInput}>
+                    <input
+                      className="input"
+                      placeholder="Enter coupon code"
+                      value={couponCode}
+                      onChange={(e) => { setCouponCode(e.target.value); setCouponError(""); }}
+                      onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
+                    />
+                    <button
+                      className="btn btn-ghost"
+                      onClick={handleApplyCoupon}
+                      disabled={couponLoading || !couponCode.trim()}
+                    >
+                      {couponLoading ? "..." : "Apply"}
+                    </button>
+                  </div>
+                  {couponError && <p className={styles.couponError}>{couponError}</p>}
+                </div>
+              )}
+              {appliedCoupon && (
+                <p className={styles.couponSuccess}>{appliedCoupon.message}</p>
+              )}
               <button
                 className="btn btn-primary btn-lg"
                 onClick={handleCheckout}

@@ -3,6 +3,12 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import type { CartItem } from "@/lib/types";
 
+export type AppliedCoupon = {
+  code: string;
+  discountAmount: number;
+  message: string;
+};
+
 type CartContextType = {
   items: CartItem[];
   addItem: (item: CartItem) => void;
@@ -12,6 +18,8 @@ type CartContextType = {
   total: number;
   count: number;
   mounted: boolean;
+  appliedCoupon: AppliedCoupon | null;
+  setAppliedCoupon: (coupon: AppliedCoupon | null) => void;
 };
 
 const CartContext = createContext<CartContextType>(null!);
@@ -23,6 +31,7 @@ export function useCart(): CartContextType {
 }
 
 const STORAGE_KEY = "mrittika_cart";
+const COUPON_KEY = "mrittika_coupon";
 
 function readStorage(): CartItem[] {
   try {
@@ -34,12 +43,24 @@ function readStorage(): CartItem[] {
   return [];
 }
 
+function readCouponStorage(): AppliedCoupon | null {
+  try {
+    const stored = localStorage.getItem(COUPON_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [appliedCoupon, setAppliedCouponState] = useState<AppliedCoupon | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setItems(readStorage());
+    setAppliedCouponState(readCouponStorage());
     setMounted(true);
   }, []);
 
@@ -48,6 +69,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     }
   }, [items, mounted]);
+
+  useEffect(() => {
+    if (mounted) {
+      if (appliedCoupon) {
+        localStorage.setItem(COUPON_KEY, JSON.stringify(appliedCoupon));
+      } else {
+        localStorage.removeItem(COUPON_KEY);
+      }
+    }
+  }, [appliedCoupon, mounted]);
 
   const addItem = useCallback((item: CartItem) => {
     setItems((prev) => {
@@ -73,14 +104,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, qty } : i)));
   }, []);
 
-  const clearCart = useCallback(() => setItems([]), []);
+  const clearCart = useCallback(() => {
+    setItems([]);
+    setAppliedCouponState(null);
+  }, []);
+
+  const setAppliedCoupon = useCallback((coupon: AppliedCoupon | null) => {
+    setAppliedCouponState(coupon);
+  }, []);
 
   const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
   const count = items.reduce((sum, i) => sum + i.qty, 0);
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQty, clearCart, total, count, mounted }}
+      value={{ items, addItem, removeItem, updateQty, clearCart, total, count, mounted, appliedCoupon, setAppliedCoupon }}
     >
       {children}
     </CartContext.Provider>

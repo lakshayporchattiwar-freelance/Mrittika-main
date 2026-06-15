@@ -1,116 +1,107 @@
 .success {
   display: flex;
   align-items: center;
-  min-height: 70vh;
+  min-height: 80vh;
 }
 
 .card {
-  max-width: 560px;
+  max-width: 520px;
   margin: 0 auto;
   text-align: center;
   background: var(--color-white-warm);
-  padding: var(--space-12);
+  padding: 2.5rem 2rem;
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
   display: grid;
   gap: var(--space-4);
 }
 
-.animWrap {
+.iconWrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(90, 122, 80, 0.1);
   display: flex;
+  align-items: center;
   justify-content: center;
-  padding: var(--space-6) 0;
+  margin: 0 auto 0.75rem;
+  animation: bounce-once 0.8s ease forwards;
 }
 
-.check {
-  width: 80px;
-  height: 80px;
-  border-radius: var(--radius-full);
-  background: #16BF78;
-  color: white;
-  font-size: 2.5rem;
-  display: grid;
-  place-items: center;
-  margin: 0 auto;
-  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+.title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  color: var(--color-text-dark);
+  letter-spacing: var(--tracking-tight);
+  margin: 0;
 }
 
-@keyframes popIn {
-  0% { transform: scale(0); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+.subtitle {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  margin: 0;
 }
 
-.confirmationPanel {
-  text-align: left;
-  background: rgba(193, 98, 43, 0.05);
-  padding: var(--space-5);
-  border-radius: var(--radius-lg);
+.trackerWrap {
+  background: var(--color-cream-deep);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+}
+
+.detailsCard {
   border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  text-align: left;
   display: grid;
-  gap: var(--space-3);
+  gap: 0.75rem;
 }
 
-.confirmRow {
+.detailRow {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--color-border-soft);
 }
 
-.confirmRow:last-child {
-  border-bottom: none;
-}
-
-.confirmLabel {
+.detailLabel {
   font-size: var(--text-sm);
   color: var(--color-text-muted);
-  font-weight: 500;
 }
 
-.confirmValue {
+.detailValue {
   font-size: var(--text-sm);
-  font-weight: 700;
+  font-family: var(--font-body);
+  font-weight: 600;
   color: var(--color-text-dark);
 }
 
 .statusBadge {
-  padding: 0.3rem 0.9rem;
-  border-radius: var(--radius-full);
-  color: white;
-  font-size: var(--text-xs);
+  font-size: 0.6875rem;
   font-weight: 600;
-  background: #16BF78;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(90, 122, 80, 0.1);
+  color: var(--color-natural-dark);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
 }
 
-.items {
-  text-align: left;
-  background: rgba(193, 98, 43, 0.05);
-  padding: var(--space-4);
-  border-radius: var(--radius-md);
-  display: grid;
-  gap: var(--space-2);
-  font-size: var(--text-sm);
+.note {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  line-height: var(--leading-normal);
+  margin: 0;
 }
 
-.itemRow {
-  display: flex;
-  justify-content: space-between;
-  padding: var(--space-1) 0;
-  border-bottom: 1px solid var(--color-border-soft);
-}
-
-.totalRow {
-  display: flex;
-  justify-content: space-between;
-  font-weight: 700;
-  padding-top: var(--space-2);
-  font-size: var(--text-md);
+.note a {
+  color: var(--color-primary);
+  text-decoration: underline;
 }
 
 .actions {
   display: flex;
+  gap: 0.75rem;
   justify-content: center;
-  gap: var(--space-3);
   flex-wrap: wrap;
 }

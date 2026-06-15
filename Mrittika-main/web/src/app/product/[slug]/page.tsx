@@ -5,7 +5,8 @@ import type { Metadata } from "next";
 import { products } from "@/data/products";
 import ProductCTA from "@/components/ProductCTA";
 import ProductGallery from "@/components/ProductGallery";
-import ReviewSection from "@/components/ReviewSection";
+import { ProductReviews } from "@/components/ReviewSection";
+import LiveProductRating from "@/components/LiveProductRating";
 import styles from "./product.module.css";
 
 type ProductPageProps = {
@@ -68,7 +69,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </div>
             <h1>{product.name}</h1>
             <div className={styles.rating}>
-              ★★★★☆ {product.rating.toFixed(1)}
+              <LiveProductRating slug={product.slug} fallback={product.rating} />
             </div>
             <div className={styles.price}>
               ₹{product.price}
@@ -123,7 +124,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </div>
             )}
 
-            <ReviewSection productSlug={product.slug} />
+            <ProductReviews productSlug={product.slug} />
           </div>
         </div>
 

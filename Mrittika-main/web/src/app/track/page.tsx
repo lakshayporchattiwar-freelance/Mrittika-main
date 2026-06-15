@@ -327,64 +327,71 @@ function TrackContent() {
             </div>
 
             {/* Delivery Tracker or Cancelled */}
-            {isCancelled && order.cancellation ? (
-              <div style={{
-                border: '1px solid rgba(220, 38, 38, 0.2)',
-                borderRadius: 'var(--radius-lg)',
-                padding: '1.5rem',
-                background: 'rgba(220, 38, 38, 0.03)',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-                  <XCircle size={24} style={{ color: '#b91c1c' }} />
-                  <h2 style={{
-                    fontFamily: 'var(--font-display)',
-                    fontSize: 'var(--text-xl)',
-                    color: '#b91c1c',
-                    margin: 0,
-                  }}>
-                    Order Cancelled
-                  </h2>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: 'var(--text-sm)' }}>
-                  <p>
-                    <span style={{ color: 'var(--color-text-muted)' }}>Reason:</span>{" "}
-                    {order.cancellation.reason}
-                  </p>
-                  <p>
-                    <span style={{ color: 'var(--color-text-muted)' }}>Cancelled on:</span>{" "}
-                    {order.cancelledAt
-                      ? new Date(order.cancelledAt).toLocaleDateString("en-IN", {
-                          day: "2-digit",
-                          month: "long",
-                          year: "numeric",
-                        })
-                      : "—"}
-                  </p>
-                  {order.cancellation.status === "Refund Initiated" ||
-                  order.cancellation.status === "Refunded" ? (
-                    <span style={{
-                      display: 'inline-block',
-                      marginTop: '0.5rem',
-                      fontSize: '0.6875rem',
-                      fontWeight: 600,
-                      letterSpacing: '0.04em',
-                      textTransform: 'uppercase',
-                      background: 'rgba(90, 122, 80, 0.1)',
-                      color: 'var(--color-natural-dark)',
-                      padding: '0.375rem 0.875rem',
-                      borderRadius: 'var(--radius-full)',
+            {isCancelled ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{
+                  border: '1px solid rgba(220, 38, 38, 0.2)',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: '1.5rem',
+                  background: 'rgba(220, 38, 38, 0.03)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                    <XCircle size={24} style={{ color: '#b91c1c' }} />
+                    <h2 style={{
+                      fontFamily: 'var(--font-display)',
+                      fontSize: 'var(--text-xl)',
+                      color: '#b91c1c',
+                      margin: 0,
                     }}>
-                      Refund of ₹{order.cancellation.refundAmount ?? order.total} — {order.cancellation.status}
-                    </span>
-                  ) : order.cancellation.status === "Pending" ? (
-                    <p style={{ marginTop: '0.5rem', color: '#c2410c', fontSize: 'var(--text-sm)' }}>
-                      Refund under review — WhatsApp us:{" "}
-                      <a href="https://wa.me/916000386664" style={{ textDecoration: 'underline' }}>
-                        6000386664
-                      </a>
+                      Order Cancelled
+                    </h2>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: 'var(--text-sm)' }}>
+                    {order.cancellationReason && (
+                      <p>
+                        <span style={{ color: 'var(--color-text-muted)' }}>Reason:</span>{" "}
+                        {order.cancellationReason}
+                      </p>
+                    )}
+                    <p>
+                      <span style={{ color: 'var(--color-text-muted)' }}>Cancelled on:</span>{" "}
+                      {order.cancelledAt
+                        ? new Date(order.cancelledAt).toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                          })
+                        : "—"}
                     </p>
-                  ) : null}
+                  </div>
                 </div>
+
+                {order.paymentMethod === 'Prepaid' && order.refundStatus && (
+                  <div style={{
+                    border: '1px solid rgba(90, 122, 80, 0.2)',
+                    borderRadius: 'var(--radius-lg)',
+                    padding: '1.5rem',
+                    background: 'rgba(90, 122, 80, 0.03)',
+                  }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: 'var(--text-sm)' }}>
+                      {order.refundStatus === 'processing' && (
+                        <p style={{ color: 'var(--color-natural-dark)', margin: 0, lineHeight: 1.6 }}>
+                          Refund of ₹{order.refundAmount ?? order.total} is being processed. Expect it in your account within 5-7 business days.
+                        </p>
+                      )}
+                      {order.refundStatus === 'processed' && (
+                        <p style={{ color: 'var(--color-natural-dark)', margin: 0, lineHeight: 1.6 }}>
+                          Refund of ₹{order.refundAmount ?? order.total} has been completed.
+                        </p>
+                      )}
+                      {order.refundStatus === 'failed' && (
+                        <p style={{ color: '#92400e', margin: 0, lineHeight: 1.6 }}>
+                          Refund of ₹{order.refundAmount ?? order.total} is being handled manually by our team. Contact WhatsApp <a href="https://wa.me/916000386664" style={{ color: '#8B4513', textDecoration: 'underline' }}>6000386664</a> if not received within 7 days.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <>

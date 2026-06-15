@@ -453,6 +453,10 @@
   color: var(--color-text-muted);
 }
 
+.couponRow {
+  color: var(--color-natural-dark);
+}
+
 .summaryTotal {
   display: flex;
   justify-content: space-between;

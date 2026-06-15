@@ -55,6 +55,8 @@ export async function POST(req: NextRequest) {
     items: orderData?.items || [],
     customer: orderData?.customer || {},
     total: orderData?.total || 0,
+    couponCode: orderData?.couponCode || null,
+    discountAmount: orderData?.discountAmount || 0,
     status: 'Order Confirmed',
     createdAt: new Date().toISOString(),
   };
@@ -108,6 +110,15 @@ export async function POST(req: NextRequest) {
     console.log('[VERIFY] Confirmation email sent ✓');
   } catch (emailError: any) {
     console.error('[VERIFY] Email failed (non-blocking):', emailError.message);
+  }
+
+  if (orderData?.couponCode) {
+    try {
+      await supabaseAdmin!.rpc('increment_coupon_usage', { coupon_code: orderData.couponCode });
+      console.log('[VERIFY] Coupon usage incremented ✓', orderData.couponCode);
+    } catch (couponErr: any) {
+      console.error('[VERIFY] Coupon increment failed (non-blocking):', couponErr.message);
+    }
   }
 
   return NextResponse.json({

@@ -1,139 +1,178 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
-import { getReviews, submitReview, type Review } from "@/lib/reviews";
-import styles from "./ReviewSection.module.css";
+import { useState, useEffect } from 'react';
+import styles from './ProductReviews.module.css';
 
-interface ReviewSectionProps {
-  productSlug: string;
+interface Review {
+  id: string;
+  customer_name: string;
+  rating: number;
+  comment: string;
+  is_verified: boolean;
+  created_at: string;
 }
 
-export default function ReviewSection({ productSlug }: ReviewSectionProps) {
+export function ProductReviews({ productSlug }: { productSlug: string }) {
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [average, setAverage] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [formName, setFormName] = useState("");
-  const [formRating, setFormRating] = useState(0);
-  const [formComment, setFormComment] = useState("");
-  const [hoverRating, setHoverRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const [toast, setToast] = useState("");
+  const [submitError, setSubmitError] = useState('');
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [showForm, setShowForm] = useState(false);
 
-  const fetchReviews = useCallback(async () => {
+  const [formName, setFormName] = useState('');
+  const [formRating, setFormRating] = useState(0);
+  const [formComment, setFormComment] = useState('');
+  const [hoverRating, setHoverRating] = useState(0);
+
+  async function loadReviews() {
     setLoading(true);
-    const data = await getReviews(productSlug);
-    setReviews(data);
-    setLoading(false);
+    try {
+      const res = await fetch(`/api/reviews?slug=${productSlug}`);
+      const data = await res.json();
+      setReviews(data.reviews || []);
+      setAverage(data.average || 0);
+    } catch (err) {
+      console.error('Failed to load reviews:', err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadReviews();
   }, [productSlug]);
 
-  useEffect(() => {
-    fetchReviews();
-  }, [fetchReviews]);
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitError('');
 
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(""), 3000);
-      return () => clearTimeout(timer);
+    if (!formName.trim()) {
+      setSubmitError('Please enter your name.');
+      return;
     }
-  }, [toast]);
+    if (formRating === 0) {
+      setSubmitError('Please select a rating.');
+      return;
+    }
+    if (formComment.trim().length < 10) {
+      setSubmitError('Review must be at least 10 characters.');
+      return;
+    }
 
-  const avgRating =
-    reviews.length > 0
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-      : 0;
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productSlug,
+          customerName: formName.trim(),
+          rating: formRating,
+          comment: formComment.trim(),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setSubmitError(data.error || 'Failed to submit review.');
+        return;
+      }
+
+      setSubmitSuccess(true);
+      setFormName('');
+      setFormRating(0);
+      setFormComment('');
+      setShowForm(false);
+      await loadReviews();
+
+      setTimeout(() => setSubmitSuccess(false), 4000);
+    } catch (err) {
+      setSubmitError('Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   const ratingCounts = [5, 4, 3, 2, 1].map((star) => ({
     star,
     count: reviews.filter((r) => r.rating === star).length,
-    pct:
-      reviews.length > 0
-        ? Math.round(
-            (reviews.filter((r) => r.rating === star).length /
-              reviews.length) *
-              100
-          )
-        : 0,
+    percent: reviews.length > 0
+      ? (reviews.filter((r) => r.rating === star).length / reviews.length) * 100
+      : 0,
   }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formName.trim() || formRating === 0 || formComment.trim().length < 10)
-      return;
-    setSubmitting(true);
-    const result = await submitReview(
-      productSlug,
-      formName.trim(),
-      formRating,
-      formComment.trim()
-    );
-    setSubmitting(false);
-    if (result) {
-      setFormName("");
-      setFormRating(0);
-      setFormComment("");
-      setShowForm(false);
-      setToast("Review submitted!");
-      fetchReviews();
-    }
-  };
-
-  const maskName = (name: string) => {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length === 1) return parts[0];
-    return `${parts[0]} ${parts[parts.length - 1][0]}.`;
-  };
-
-  const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("en-IN", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  const renderStars = (rating: number) => {
+  function renderStars(rating: number, size: string = styles.starMd) {
     return (
       <span className={styles.stars}>
         {[1, 2, 3, 4, 5].map((s) => (
-          <span key={s} className={s <= rating ? styles.starFilled : styles.starEmpty}>
-            ★
-          </span>
+          <span key={s} className={`${s <= rating ? styles.starFilled : styles.starEmpty} ${size}`}>★</span>
         ))}
       </span>
     );
-  };
+  }
+
+  function maskName(name: string) {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0];
+    return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+  }
+
+  function formatDate(dateStr: string) {
+    return new Date(dateStr).toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  }
+
+  if (loading) {
+    return (
+      <div className={styles.section}>
+        <h3 className={styles.heading}>Customer Reviews</h3>
+        <div className={styles.empty}>Loading reviews…</div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.section}>
-      {toast && <div className={styles.toast}>{toast}</div>}
+      {submitSuccess && (
+        <div className={styles.toast}>Review submitted!</div>
+      )}
 
       <h3 className={styles.heading}>Customer Reviews</h3>
 
-      <div className={styles.summary}>
-        <div className={styles.avgBlock}>
-          <span className={styles.avgNumber}>{avgRating.toFixed(1)}</span>
-          {renderStars(Math.round(avgRating))}
-          <span className={styles.reviewCount}>({reviews.length} review{reviews.length !== 1 ? "s" : ""})</span>
-        </div>
-        <div className={styles.breakdown}>
-          {ratingCounts.map(({ star, count, pct }) => (
-            <div key={star} className={styles.breakdownRow}>
-              <span className={styles.breakdownLabel}>{star}★</span>
-              <div className={styles.breakdownBar}>
-                <div className={styles.breakdownFill} style={{ width: `${pct}%` }} />
+      {reviews.length === 0 ? (
+        <p className={styles.emptyText}>No reviews yet. Be the first to share your experience!</p>
+      ) : (
+        <div className={styles.summary}>
+          <div className={styles.avgBlock}>
+            <span className={styles.avgNumber}>{average.toFixed(1)}</span>
+            {renderStars(Math.round(average))}
+            <span className={styles.reviewCount}>({reviews.length} review{reviews.length !== 1 ? 's' : ''})</span>
+          </div>
+          <div className={styles.breakdown}>
+            {ratingCounts.map(({ star, count, percent }) => (
+              <div key={star} className={styles.breakdownRow}>
+                <span className={styles.breakdownLabel}>{star}★</span>
+                <div className={styles.breakdownBar}>
+                  <div className={styles.breakdownFill} style={{ width: `${percent}%` }} />
+                </div>
+                <span className={styles.breakdownCount}>{count}</span>
               </div>
-              <span className={styles.breakdownCount}>{count}</span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <button
         className={styles.writeBtn}
         onClick={() => setShowForm(!showForm)}
       >
-        {showForm ? "Cancel" : "Write a Review"}
+        {showForm ? 'Cancel' : 'Write a Review'}
       </button>
 
       {showForm && (
@@ -156,11 +195,7 @@ export default function ReviewSection({ productSlug }: ReviewSectionProps) {
                 <button
                   type="button"
                   key={s}
-                  className={
-                    s <= (hoverRating || formRating)
-                      ? styles.starFilled
-                      : styles.starEmpty
-                  }
+                  className={s <= (hoverRating || formRating) ? styles.starFilled : styles.starEmpty}
                   onClick={() => setFormRating(s)}
                   onMouseEnter={() => setHoverRating(s)}
                   onMouseLeave={() => setHoverRating(0)}
@@ -182,43 +217,33 @@ export default function ReviewSection({ productSlug }: ReviewSectionProps) {
               rows={4}
             />
           </label>
+          {submitError && <p className={styles.error}>{submitError}</p>}
           <button
             type="submit"
             className={styles.submitBtn}
-            disabled={
-              submitting ||
-              !formName.trim() ||
-              formRating === 0 ||
-              formComment.trim().length < 10
-            }
+            disabled={submitting || !formName.trim() || formRating === 0 || formComment.trim().length < 10}
           >
-            {submitting ? "Submitting..." : "Post Review"}
+            {submitting ? 'Submitting...' : 'Post Review'}
           </button>
         </form>
       )}
 
       <div className={styles.reviewList}>
-        {loading ? (
-          <p className={styles.empty}>Loading reviews…</p>
-        ) : reviews.length === 0 ? (
-          <p className={styles.empty}>No reviews yet. Be the first to share your experience!</p>
-        ) : (
-          reviews.map((review) => (
-            <div key={review.id} className={styles.reviewCard}>
-              <div className={styles.reviewHeader}>
-                {renderStars(review.rating)}
-                {review.verified && (
-                  <span className={styles.verifiedBadge}>Verified Purchase</span>
-                )}
-              </div>
-              <p className={styles.reviewComment}>{review.comment}</p>
-              <div className={styles.reviewFooter}>
-                <span className={styles.reviewName}>{maskName(review.name)}</span>
-                <span className={styles.reviewDate}>{formatDate(review.created_at)}</span>
-              </div>
+        {reviews.length === 0 && !loading ? null : reviews.map((review) => (
+          <div key={review.id} className={styles.reviewCard}>
+            <div className={styles.reviewHeader}>
+              {renderStars(review.rating, styles.starSm)}
+              {review.is_verified && (
+                <span className={styles.verifiedBadge}>Verified Purchase</span>
+              )}
             </div>
-          ))
-        )}
+            <p className={styles.reviewComment}>{review.comment}</p>
+            <div className={styles.reviewFooter}>
+              <span className={styles.reviewName}>{maskName(review.customer_name)}</span>
+              <span className={styles.reviewDate}>{formatDate(review.created_at)}</span>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
