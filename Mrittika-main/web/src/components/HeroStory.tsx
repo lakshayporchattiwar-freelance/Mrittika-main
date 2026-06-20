@@ -121,15 +121,6 @@ export default function HeroStory() {
         <FloatingLeaves count={10} />
         <div className={styles.heroContent}>
           <h1 className={styles.heading}>Mrittika</h1>
-          <p className={styles.tagline}>Natural Skincare Handcrafted for Indian Skin</p>
-          <div className={styles.ctas}>
-            <Link href="/shop" className="btn btn-primary btn-lg">
-              Shop Now
-            </Link>
-            <Link href="/about" className="btn btn-ghost btn-lg">
-              Our Story
-            </Link>
-          </div>
         </div>
       </div>
       <div className={styles.scrollCue}>

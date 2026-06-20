@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="2b748fae-4851-4cba-b1e9-bedf298ebe65" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/next.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Mrittika-main/web/next.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Mrittika-main/web/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/Mrittika-main/web/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/about/about.module.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/about/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/admin/admin.module.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/admin/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/cart/cart.module.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/cart/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/checkout/checkout.module.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/checkout/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/contact/contact.module.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/contact/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/Mrittika-main/web/src/app/globals.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Mrittika-main/web/src/app/layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/order-success/order-success.module.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/order-success/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/orders/orders.module.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/orders/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/page.module.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/policies/[slug]/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/policies/[slug]/policy.module.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/policies/privacy/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/policies/refund/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/policies/shipping/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/policies/terms/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/product/[slug]/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/product/[slug]/product.module.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/shop/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/shop/shop.module.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/track/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/track/track.module.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/wishlist/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/app/wishlist/wishlist.module.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/components/Footer.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Mrittika-main/web/src/components/Footer.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/components/HeroFramePlayer.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Mrittika-main/web/src/components/HeroFramePlayer.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/components/HeroStory.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Mrittika-main/web/src/components/HeroStory.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mrittika-main/web/src/components/Navbar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Mrittika-main/web/src/components/Navbar.tsx" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_C:/Users/LAKSH/Downloads/Mrittika-main" value="3FMnbCcTjnHcixUWgq033R9l6pK" />
+    </persistenceIdMap>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "lakshayporchattiwar-freelance"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/lakshayporchattiwar-freelance/Mrittika-main.git",
+    "accountId": "d88bcaf7-141c-400a-a1c9-af06b779376c"
+  }
+}]]></component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 2
+}]]></component>
+  <component name="ProjectId" id="3FMnbCcTjnHcixUWgq033R9l6pK" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/LAKSH/Downloads/Mrittika-main"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-1f1b7bcced7d-64d779b69b7a-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-251.29188.22" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="2b748fae-4851-4cba-b1e9-bedf298ebe65" name="Changes" comment="" />
+      <created>1781893874987</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1781893874987</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="github-copilot-workspace">
+    <instructionFileLocations>
+      <option value=".github/instructions" />
+    </instructionFileLocations>
+    <promptFileLocations>
+      <option value=".github/prompts" />
+    </promptFileLocations>
+  </component>
+</project>

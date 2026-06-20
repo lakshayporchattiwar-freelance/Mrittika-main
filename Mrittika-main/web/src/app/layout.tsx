@@ -2,9 +2,20 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { CartProvider } from "@/context/CartContext";
+import { DM_Sans, Cormorant_Garamond } from "next/font/google";
+import { Toaster } from "@/components/ui/sonner";
+
+const dmSans = DM_Sans({
+  variable: "--font-body",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+});
+
+const cormorant = Cormorant_Garamond({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+});
 
 export const metadata: Metadata = {
   title: "Mrittika — Natural Skincare Handcrafted for Indian Skin",
@@ -54,7 +65,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${dmSans.variable} ${cormorant.variable} antialiased`}>
       <head>
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-38SPFWJ451"
@@ -87,19 +98,9 @@ export default function RootLayout({
             style={{ display: 'none', visibility: 'hidden' }}
           />
         </noscript>
-        <link rel="preload" href="/hero/frames/webp_frame_0001.webp" as="image" media="(min-width: 769px)" />
-        <link rel="preload" href="/hero/frames/webp_frame_0002.webp" as="image" media="(min-width: 769px)" />
-        <link rel="preload" href="/hero/frames_mobile/webp_frame_0001.webp" as="image" media="(max-width: 768px)" />
-        <link rel="preload" href="/hero/frames_mobile/webp_frame_0002.webp" as="image" media="(max-width: 768px)" />
-        <a href="#main" className="skip-link">
-          Skip to main content
-        </a>
-        <CartProvider>
-          <Navbar />
-          <main id="main" className="animate-page-in">{children}</main>
-        </CartProvider>
-        <Footer />
+        {children}
         <Analytics />
+        <Toaster />
       </body>
     </html>
   );

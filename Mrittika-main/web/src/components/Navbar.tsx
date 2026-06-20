@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { getWishlistCount } from "@/lib/wishlist";
 import SearchOverlay from "@/components/SearchOverlay";
@@ -22,12 +23,16 @@ const accountLinks = [
 ];
 
 export default function Navbar() {
+  const pathname = usePathname();
+  const isDashboard = pathname.startsWith("/dashboard") || pathname.startsWith("/auth");
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [accountOpen, setAccountOpen] = useState(false);
   const { count } = useCart();
+
+  if (isDashboard) return null;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);

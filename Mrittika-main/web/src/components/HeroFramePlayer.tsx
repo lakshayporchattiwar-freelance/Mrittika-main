@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import Link from 'next/link';
 import {
   HERO_FRAME_CONFIG,
   getFramePath,
@@ -237,11 +236,23 @@ export function HeroFramePlayer() {
       }, 150);
     }
 
+    function handleOrientationChange() {
+      setTimeout(() => {
+        isMobileRef.current = window.innerWidth <= HERO_FRAME_CONFIG.mobileBreakpoint;
+        cacheRef.current.clear();
+        cancelAnimationFrame(rafRef.current);
+        playingRef.current = false;
+        sizeRef.current = { cw: 1, ch: 1, dpr: 1 };
+        startPreloadAndPlay();
+      }, 300);
+    }
+
     startPreloadAndPlay();
 
     mql.addEventListener('change', handleBreakpointChange);
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleOrientationChange);
 
     return () => {
       cancelAnimationFrame(rafRef.current);
@@ -249,6 +260,7 @@ export function HeroFramePlayer() {
       mql.removeEventListener('change', handleBreakpointChange);
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleOrientationChange);
     };
   }, []);
 
@@ -277,6 +289,9 @@ export function HeroFramePlayer() {
           width: '100%',
           height: '100%',
           display: 'block',
+          touchAction: 'pan-y',
+          pointerEvents: 'none',
+          willChange: 'transform',
         }}
       />
 
@@ -288,49 +303,9 @@ export function HeroFramePlayer() {
         }}
       />
 
-      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center text-white px-6">
-        <p className="tracking-[0.25em] uppercase font-light mb-3 text-[#f5dfc0] text-xs md:text-sm">
-          Rooted in Nature · Refined by Ritual
-        </p>
 
-        <h1
-          className="font-serif font-semibold leading-tight mb-4 drop-shadow-lg text-4xl md:text-5xl lg:text-6xl"
-          style={{ textShadow: '0 2px 20px rgba(0,0,0,0.5)' }}
-        >
-          From the Earth,
-          <br />
-          For Your Skin
-        </h1>
 
-        <p
-          className="font-light text-[#f5dfc0] mb-8 max-w-md mx-auto leading-relaxed text-sm md:text-base"
-          style={{ textShadow: '0 1px 10px rgba(0,0,0,0.6)' }}
-        >
-          Handcrafted botanical rituals made for Indian skin
-        </p>
 
-        <div className="flex gap-3 flex-col sm:flex-row w-full max-w-xs sm:max-w-none">
-          <Link
-            href="/shop"
-            className="bg-[#8B4513] hover:bg-[#7a3b10] text-white font-medium rounded-full transition-all duration-200 active:scale-95 shadow-lg hover:shadow-xl py-3 px-8 text-sm text-center"
-          >
-            Shop Now
-          </Link>
-          <Link
-            href="/about"
-            className="border border-white/70 hover:border-white text-white hover:bg-white/10 font-medium rounded-full transition-all duration-200 active:scale-95 py-3 px-8 text-sm text-center"
-          >
-            Our Story
-          </Link>
-        </div>
-      </div>
-
-      <div className="absolute z-20 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 bottom-8">
-        <span className="text-white text-xs tracking-widest uppercase font-light">
-          Discover
-        </span>
-        <div className="w-px h-8 bg-white/60 animate-pulse" />
-      </div>
     </section>
   );
 }

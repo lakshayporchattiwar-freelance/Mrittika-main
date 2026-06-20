@@ -94,6 +94,25 @@ export async function POST(req: NextRequest) {
     } catch (couponErr: any) {
       console.error('[COD] Coupon increment failed (non-blocking):', couponErr.message);
     }
+
+    try {
+      const { data: couponRec } = await supabaseAdmin!
+        .from('coupons')
+        .select('id')
+        .eq('code', orderData.couponCode.toUpperCase())
+        .single();
+
+      if (couponRec) {
+        await supabaseAdmin!.from('coupon_redemptions').insert({
+          coupon_id: couponRec.id,
+          user_email: orderData.customer.email.trim().toLowerCase(),
+          order_id: orderId,
+        });
+        console.log('[COD] Coupon redemption recorded ✓');
+      }
+    } catch (redeemErr: any) {
+      console.error('[COD] Coupon redemption record failed (non-blocking):', redeemErr.message);
+    }
   }
 
   return NextResponse.json({

@@ -9,13 +9,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ valid: false, error: 'Invalid request' }, { status: 400 });
   }
 
-  const { code, subtotal } = body;
+  const { code, subtotal, email } = body;
 
   if (!code || typeof subtotal !== 'number') {
     return NextResponse.json({ valid: false, error: 'Code and subtotal are required' }, { status: 400 });
   }
 
   const normalizedCode = code.trim().toUpperCase();
+  const normalizedEmail = (email || '').trim().toLowerCase();
 
   const { data: coupon, error } = await supabaseAdmin!
     .from('coupons')
@@ -35,15 +36,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ valid: false, error: 'This coupon has expired' }, { status: 400 });
   }
 
-  if (coupon.used_count >= coupon.max_uses) {
+  if (coupon.max_uses && coupon.used_count >= coupon.max_uses) {
     return NextResponse.json({ valid: false, error: 'This coupon has reached its usage limit' }, { status: 400 });
   }
 
-  if (subtotal < coupon.min_order_value) {
+  if (coupon.min_order_value && subtotal < coupon.min_order_value) {
     return NextResponse.json({
       valid: false,
       error: `This coupon requires a minimum order of Rs.${coupon.min_order_value}`,
     }, { status: 400 });
+  }
+
+  if (normalizedEmail) {
+    const { count } = await supabaseAdmin!
+      .from('coupon_redemptions')
+      .select('id', { count: 'exact', head: true })
+      .eq('coupon_id', coupon.id)
+      .eq('user_email', normalizedEmail);
+
+    if (count && count > 0) {
+      return NextResponse.json({ valid: false, error: 'You have already used this coupon code' }, { status: 400 });
+    }
   }
 
   let discountAmount = 0;
@@ -61,6 +74,8 @@ export async function POST(req: NextRequest) {
     discountType: coupon.discount_type,
     discountValue: coupon.discount_value,
     discountAmount,
-    message: `${coupon.discount_value}% off applied! You saved Rs.${discountAmount}`,
+    message: coupon.discount_type === 'percentage'
+      ? `${coupon.discount_value}% off applied! You saved Rs.${discountAmount}`
+      : `Rs.${coupon.discount_value} off applied! You saved Rs.${discountAmount}`,
   });
 }

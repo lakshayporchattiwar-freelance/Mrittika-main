@@ -1,7 +1,15 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import styles from "./Footer.module.css";
 
 export default function Footer() {
+  const pathname = usePathname();
+  const isDashboard = pathname.startsWith("/dashboard") || pathname.startsWith("/auth");
+
+  if (isDashboard) return null;
+
   return (
     <footer className={styles.footer}>
       <div className={`container ${styles.grid}`}>
@@ -46,6 +54,13 @@ export default function Footer() {
           <span>Mastercard</span>
           <span>COD</span>
         </div>
+        <a
+          href="/auth/login"
+          className="opacity-40 hover:opacity-80 transition-opacity text-[10px] tracking-widest uppercase"
+          aria-label="Admin"
+        >
+          Admin
+        </a>
       </div>
     </footer>
   );
