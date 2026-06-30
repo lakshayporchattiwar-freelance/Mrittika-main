@@ -38,6 +38,8 @@ export interface OrderRecord {
   items: OrderItem[];
   customer: CustomerInfo;
   total: number;
+  subtotal?: number;
+  shippingCharge?: number;
   couponCode?: string | null;
   discountAmount?: number;
   status: string;
@@ -102,6 +104,12 @@ function rowToOrderRecord(order: any): OrderRecord {
 export async function saveOrder(order: OrderRecord): Promise<void> {
   const customerName = `${order.customer.firstName} ${order.customer.lastName}`.trim();
 
+  const itemsSubtotal = order.items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  const shippingCharge = order.shippingCharge ?? (itemsSubtotal >= 499 ? 0 : 49);
+  const codCharge = order.paymentMethod === 'COD' ? 49 : 0;
+  const discountAmt = order.discountAmount || 0;
+  const finalTotal = order.total || (itemsSubtotal - discountAmt + shippingCharge + codCharge);
+
   const { error: orderError } = await supabaseAdmin!
     .from('orders')
     .insert({
@@ -110,14 +118,12 @@ export async function saveOrder(order: OrderRecord): Promise<void> {
       razorpay_payment_id: order.razorpayPaymentId || null,
       payment_method: order.paymentMethod,
       status: order.status,
-      subtotal: order.total,
-      shipping_charge: 0,
-      cod_charge: order.paymentMethod === 'COD' ? 49 : 0,
-      total: order.paymentMethod === 'COD'
-        ? order.total - (order.discountAmount || 0) + 49
-        : order.total - (order.discountAmount || 0),
+      subtotal: itemsSubtotal,
+      shipping_charge: shippingCharge,
+      cod_charge: codCharge,
+      discount_amount: discountAmt,
+      total: finalTotal,
       coupon_code: order.couponCode || null,
-      discount_amount: order.discountAmount || 0,
       customer_name: customerName,
       customer_email: order.customer.email,
       customer_phone: order.customer.phone,

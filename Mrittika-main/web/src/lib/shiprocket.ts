@@ -76,6 +76,10 @@ export async function createShiprocketOrder(order: any): Promise<{
     throw new Error(`SHIPROCKET_INVALID_PHONE: "${order.customer.phone}" is not a valid 10-digit phone number`);
   }
 
+  const itemsSubtotal = order.items.reduce((sum: number, item: any) => sum + (item.price * item.qty), 0);
+  const shippingCharges = order.total - itemsSubtotal - (order.paymentMethod === 'COD' ? 49 : 0) - (order.discountAmount || 0);
+  const codTransactionCharge = order.paymentMethod === 'COD' ? 49 : 0;
+
   const payload = {
     order_id: order.id,
     order_date: new Date().toISOString().slice(0, 16).replace('T', ' '),
@@ -103,11 +107,11 @@ export async function createShiprocketOrder(order: any): Promise<{
       hsn: 33049900,
     })),
     payment_method: order.paymentMethod === 'COD' ? 'COD' : 'Prepaid',
-    shipping_charges: 0,
+    shipping_charges: shippingCharges > 0 ? shippingCharges : 0,
     giftwrap_charges: 0,
-    transaction_charges: order.paymentMethod === 'COD' ? 49 : 0,
-    total_discount: 0,
-    sub_total: order.total,
+    transaction_charges: codTransactionCharge,
+    total_discount: order.discountAmount || 0,
+    sub_total: itemsSubtotal,
     length: 12,
     breadth: 12,
     height: 6,

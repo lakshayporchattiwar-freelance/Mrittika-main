@@ -60,10 +60,10 @@ export async function POST(req: NextRequest) {
     .from('reviews')
     .insert({
       product_slug: productSlug,
-      customer_name: customerName.trim().slice(0, 60),
+      name: customerName.trim().slice(0, 60),
       rating,
       comment: comment.trim().slice(0, 1000),
-      is_verified: false,
+      verified: false,
     })
     .select()
     .single();

@@ -5,10 +5,10 @@ import styles from './ProductReviews.module.css';
 
 interface Review {
   id: string;
-  customer_name: string;
+  name: string;
   rating: number;
   comment: string;
-  is_verified: boolean;
+  verified: boolean;
   created_at: string;
 }
 
@@ -233,13 +233,13 @@ export function ProductReviews({ productSlug }: { productSlug: string }) {
           <div key={review.id} className={styles.reviewCard}>
             <div className={styles.reviewHeader}>
               {renderStars(review.rating, styles.starSm)}
-              {review.is_verified && (
+              {review.verified && (
                 <span className={styles.verifiedBadge}>Verified Purchase</span>
               )}
             </div>
             <p className={styles.reviewComment}>{review.comment}</p>
             <div className={styles.reviewFooter}>
-              <span className={styles.reviewName}>{maskName(review.customer_name)}</span>
+              <span className={styles.reviewName}>{maskName(review.name)}</span>
               <span className={styles.reviewDate}>{formatDate(review.created_at)}</span>
             </div>
           </div>

@@ -26,6 +26,10 @@ export async function POST(req: NextRequest) {
 
   const orderId = `MRT-COD-${Date.now()}`;
 
+  const itemsSubtotal = orderData.items.reduce((sum: number, item: any) => sum + (item.price * item.qty), 0);
+  const shippingCharge = itemsSubtotal >= 499 ? 0 : 49;
+  const codCharge = 49;
+
   const orderRecord = {
     id: orderId,
     razorpayOrderId: undefined,
@@ -33,6 +37,8 @@ export async function POST(req: NextRequest) {
     paymentMethod: 'COD',
     items: orderData.items,
     customer: orderData.customer,
+    subtotal: itemsSubtotal,
+    shippingCharge: shippingCharge,
     total: total,
     couponCode: orderData.couponCode || null,
     discountAmount: orderData.discountAmount || 0,

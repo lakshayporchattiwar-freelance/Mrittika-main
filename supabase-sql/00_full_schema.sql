@@ -117,7 +117,12 @@ CREATE TABLE orders (
   awb_number TEXT,
   courier_name TEXT,
   cancellation JSONB,
+  cancellation_reason TEXT,
   cancelled_at TIMESTAMPTZ,
+  shiprocket_cancel_status TEXT,
+  refund_id TEXT,
+  refund_status TEXT,
+  refund_amount INTEGER,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -164,21 +169,7 @@ ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Anyone can read reviews" ON reviews FOR SELECT USING (true);
 CREATE POLICY "Anyone can insert reviews" ON reviews FOR INSERT WITH CHECK (true);
-
--- Seed reviews for Ubtan Mix Face Pack
-INSERT INTO reviews (product_slug, name, rating, comment, verified) VALUES
-  ('ubtan-mix-face-pack', 'Sneha R.', 5, 'My skin feels so much brighter after just one week. The turmeric fragrance is divine and it genuinely de-tans!', true),
-  ('ubtan-mix-face-pack', 'Arjun M.', 4, 'Great product with natural ingredients. A little goes a long way. Will definitely repurchase.', false);
-
--- Seed reviews for Soft Glow Face Pack
-INSERT INTO reviews (product_slug, name, rating, comment, verified) VALUES
-  ('soft-glow-face-pack', 'Divya K.', 5, 'My skin has never felt this soft. The chamomile scent is so calming and the glow lasts all day!', true),
-  ('soft-glow-face-pack', 'Isha P.', 4, 'Really nice face pack, feels gentle on sensitive skin. Saw visible improvement in texture within two uses.', false);
-
--- Seed reviews for Oil Control Face Pack
-INSERT INTO reviews (product_slug, name, rating, comment, verified) VALUES
-  ('oil-control-face-pack', 'Rohan S.', 5, 'Finally something that controls my oily T-zone without over-drying. The neem feels so refreshing!', true),
-  ('oil-control-face-pack', 'Kavita J.', 4, 'Good for everyday use on combination skin. Keeps oil at bay for most of the day. Very happy with the results.', true);
+CREATE POLICY "Service role full access on reviews" ON reviews FOR ALL USING (true) WITH CHECK (true);
 
 -- ============================================================
 -- 7. COUPONS
