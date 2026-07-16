@@ -346,7 +346,7 @@ export default function OrdersPage() {
                       className="font-mono text-xs text-brand-terracotta hover:underline"
                       title="Click to copy"
                     >
-                      formatOrderId(order.id)
+                      {formatOrderId(order.id)}
                     </button>
                   </td>
                   <td className="px-4 py-3">
@@ -522,7 +522,7 @@ export default function OrdersPage() {
             <SheetDescription>
               {detailOrder && (
                 <span className="font-mono">
-                  formatOrderId(detailOrder.id)
+                  {formatOrderId(detailOrder.id)}
                 </span>
               )}
             </SheetDescription>
@@ -762,7 +762,7 @@ export default function OrdersPage() {
             <DialogDescription>
               {statusTarget && (
                 <span className="font-mono">
-                  formatOrderId(statusTarget.id)
+                  {formatOrderId(statusTarget.id)}
                 </span>
               )}
             </DialogDescription>
