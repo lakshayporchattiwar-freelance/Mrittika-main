@@ -86,6 +86,11 @@ const statusOptions = [
   "Refunded",
 ]
 
+function formatOrderId(id: string) {
+  if (id.startsWith("MRT-")) return id
+  return `MRT-${id.slice(0, 8).toUpperCase()}`
+}
+
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -109,15 +114,25 @@ export default function OrdersPage() {
     const supabase = createClient()
     const { data } = await supabase
       .from("orders")
-      .select("*")
+      .select("*, order_items(*)")
       .order("created_at", { ascending: false })
       .range(from, from + 49)
 
     if (data) {
+      const mapped = (data as any[]).map((o) => ({
+        ...o,
+        items: (o.order_items || []).map((item: any) => ({
+          name: item.product_name,
+          qty: item.quantity,
+          price: item.unit_price,
+          image: item.image_url || `/images/products/${item.product_slug}.webp`,
+        })),
+        shiprocket_awb: o.awb_number,
+      }))
       if (from === 0) {
-        setOrders(data as Order[])
+        setOrders(mapped as Order[])
       } else {
-        setOrders((prev) => [...prev, ...(data as Order[])])
+        setOrders((prev) => [...prev, ...(mapped as Order[])])
       }
       setHasMore(data.length === 50)
     }
@@ -331,7 +346,7 @@ export default function OrdersPage() {
                       className="font-mono text-xs text-brand-terracotta hover:underline"
                       title="Click to copy"
                     >
-                      MRT-{order.id.slice(0, 4).toUpperCase()}
+                      formatOrderId(order.id)
                     </button>
                   </td>
                   <td className="px-4 py-3">
@@ -440,7 +455,7 @@ export default function OrdersPage() {
                 onClick={() => handleCopyId(order.id)}
                 className="font-mono text-xs text-brand-terracotta"
               >
-                MRT-{order.id.slice(0, 4).toUpperCase()}
+                formatOrderId(order.id)
               </button>
               <StatusBadge status={order.status} />
             </div>
@@ -507,7 +522,7 @@ export default function OrdersPage() {
             <SheetDescription>
               {detailOrder && (
                 <span className="font-mono">
-                  MRT-{detailOrder.id.slice(0, 4).toUpperCase()}
+                  formatOrderId(detailOrder.id)
                 </span>
               )}
             </SheetDescription>
@@ -747,7 +762,7 @@ export default function OrdersPage() {
             <DialogDescription>
               {statusTarget && (
                 <span className="font-mono">
-                  MRT-{statusTarget.id.slice(0, 4).toUpperCase()}
+                  formatOrderId(statusTarget.id)
                 </span>
               )}
             </DialogDescription>
