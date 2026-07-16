@@ -1,1 +1,1 @@
-export { supabase, supabaseAdmin, supabaseConfigError } from "./supabaseClient";
+export { supabase, supabaseAdmin, supabaseConfigError, requireAdmin } from "./supabaseClient";
