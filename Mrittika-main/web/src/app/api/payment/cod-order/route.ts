@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { saveOrder, updateOrder } from '@/lib/orderStore';
 import { createShiprocketOrder } from '@/lib/shiprocket';
 import { sendOrderConfirmationEmail } from '@/lib/notifications';
-import { supabaseAdmin } from '@/lib/supabase';
+import { requireAdmin } from '@/lib/supabase';
 
 export async function POST(req: NextRequest) {
   console.log('[COD] COD order started');
@@ -16,8 +16,13 @@ export async function POST(req: NextRequest) {
 
   const { orderData, total } = body;
 
-  if (!orderData?.customer?.email || !orderData?.items?.length) {
-    console.error('[COD] Missing order data:', { hasCustomer: !!orderData?.customer, hasItems: !!orderData?.items?.length });
+  if (!orderData?.customer?.email || !orderData?.customer?.firstName || !orderData?.items?.length) {
+    console.error('[COD] Missing order data:', {
+      hasCustomer: !!orderData?.customer,
+      hasEmail: !!orderData?.customer?.email,
+      hasName: !!orderData?.customer?.firstName,
+      hasItems: !!orderData?.items?.length,
+    });
     return NextResponse.json({
       success: false,
       error: 'Missing order information. Please fill all required fields.',
@@ -71,7 +76,7 @@ export async function POST(req: NextRequest) {
       courierName: shiprocketResult.courierName,
     });
 
-    await supabaseAdmin!
+    await requireAdmin()
       .from('orders')
       .update({ shiprocket_sync_status: 'success', shiprocket_error: null })
       .eq('id', orderId);
@@ -80,7 +85,7 @@ export async function POST(req: NextRequest) {
   } catch (shiprocketError: any) {
     console.error('[COD] SHIPROCKET FAILED:', shiprocketError.message);
 
-    await supabaseAdmin!
+    await requireAdmin()
       .from('orders')
       .update({ shiprocket_sync_status: 'failed', shiprocket_error: shiprocketError.message })
       .eq('id', orderId);
@@ -95,21 +100,21 @@ export async function POST(req: NextRequest) {
 
   if (orderData?.couponCode) {
     try {
-      await supabaseAdmin!.rpc('increment_coupon_usage', { coupon_code: orderData.couponCode });
+      await requireAdmin().rpc('increment_coupon_usage', { coupon_code: orderData.couponCode });
       console.log('[COD] Coupon usage incremented ✓', orderData.couponCode);
     } catch (couponErr: any) {
       console.error('[COD] Coupon increment failed (non-blocking):', couponErr.message);
     }
 
     try {
-      const { data: couponRec } = await supabaseAdmin!
+      const { data: couponRec } = await requireAdmin()
         .from('coupons')
         .select('id')
         .eq('code', orderData.couponCode.toUpperCase())
         .single();
 
       if (couponRec) {
-        await supabaseAdmin!.from('coupon_redemptions').insert({
+        await requireAdmin().from('coupon_redemptions').insert({
           coupon_id: couponRec.id,
           user_email: orderData.customer.email.trim().toLowerCase(),
           order_id: orderId,

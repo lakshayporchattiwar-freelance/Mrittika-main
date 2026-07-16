@@ -7,12 +7,21 @@ const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 export const supabase =
   supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
-export const supabaseAdmin =
+const adminClient =
   supabaseUrl && serviceRoleKey
     ? createClient(supabaseUrl, serviceRoleKey, {
         auth: { autoRefreshToken: false, persistSession: false },
       })
     : null;
+
+export const supabaseAdmin = adminClient;
+
+export function requireAdmin() {
+  if (!adminClient) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured. Order operations will fail.");
+  }
+  return adminClient;
+}
 
 export const supabaseConfigError =
   !supabaseUrl || !supabaseAnonKey ? "Supabase env vars are missing" : null;

@@ -1,4 +1,4 @@
-import { supabaseAdmin } from './supabase';
+import { requireAdmin } from './supabase';
 
 export interface OrderItem {
   id: string;
@@ -102,15 +102,27 @@ function rowToOrderRecord(order: any): OrderRecord {
 }
 
 export async function saveOrder(order: OrderRecord): Promise<void> {
-  const customerName = `${order.customer.firstName} ${order.customer.lastName}`.trim();
+  const customerName = `${order.customer?.firstName || ''} ${order.customer?.lastName || ''}`.trim() || 'Customer';
 
-  const itemsSubtotal = order.items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  const itemsSubtotal = (order.items || []).reduce((sum, item) => sum + ((item.price || 0) * (item.qty || 0)), 0);
   const shippingCharge = order.shippingCharge ?? (itemsSubtotal >= 499 ? 0 : 49);
   const codCharge = order.paymentMethod === 'COD' ? 49 : 0;
   const discountAmt = order.discountAmount || 0;
   const finalTotal = order.total || (itemsSubtotal - discountAmt + shippingCharge + codCharge);
 
-  const { error: orderError } = await supabaseAdmin!
+  console.log('[ORDER-STORE] Saving order:', {
+    id: order.id,
+    paymentMethod: order.paymentMethod,
+    itemsSubtotal,
+    shippingCharge,
+    codCharge,
+    discountAmt,
+    finalTotal,
+    customer: customerName,
+    email: order.customer?.email,
+  });
+
+  const { error: orderError } = await requireAdmin()
     .from('orders')
     .insert({
       id: order.id,
@@ -125,13 +137,13 @@ export async function saveOrder(order: OrderRecord): Promise<void> {
       total: finalTotal,
       coupon_code: order.couponCode || null,
       customer_name: customerName,
-      customer_email: order.customer.email,
-      customer_phone: order.customer.phone,
-      shipping_address: order.customer.address,
-      shipping_city: order.customer.city,
-      shipping_state: order.customer.state,
-      shipping_pincode: order.customer.pincode,
-      shipping_country: order.customer.country || 'India',
+      customer_email: order.customer?.email || '',
+      customer_phone: order.customer?.phone || '',
+      shipping_address: order.customer?.address || '',
+      shipping_city: order.customer?.city || '',
+      shipping_state: order.customer?.state || '',
+      shipping_pincode: order.customer?.pincode || '',
+      shipping_country: order.customer?.country || 'India',
       created_at: order.createdAt,
       updated_at: new Date().toISOString(),
     });
@@ -151,7 +163,7 @@ export async function saveOrder(order: OrderRecord): Promise<void> {
     image_url: item.image,
   }));
 
-  const { error: itemsError } = await supabaseAdmin!
+  const { error: itemsError } = await requireAdmin()
     .from('order_items')
     .insert(orderItemsRows);
 
@@ -163,7 +175,7 @@ export async function saveOrder(order: OrderRecord): Promise<void> {
 }
 
 export async function getOrderById(id: string): Promise<OrderRecord | null> {
-  const { data: order, error } = await supabaseAdmin!
+  const { data: order, error } = await requireAdmin()
     .from('orders')
     .select('*, order_items(*)')
     .eq('id', id)
@@ -197,7 +209,7 @@ export async function updateOrder(
   if (updates.cancelledAt) dbUpdates.cancelled_at = updates.cancelledAt;
   if (updates.razorpayPaymentId) dbUpdates.razorpay_payment_id = updates.razorpayPaymentId;
 
-  const { error } = await supabaseAdmin!
+  const { error } = await requireAdmin()
     .from('orders')
     .update(dbUpdates)
     .eq('id', id);
@@ -206,7 +218,7 @@ export async function updateOrder(
 }
 
 export async function getOrdersByEmail(email: string): Promise<OrderRecord[]> {
-  const { data: orders, error } = await supabaseAdmin!
+  const { data: orders, error } = await requireAdmin()
     .from('orders')
     .select('*, order_items(*)')
     .eq('customer_email', email)
@@ -217,7 +229,7 @@ export async function getOrdersByEmail(email: string): Promise<OrderRecord[]> {
 }
 
 export async function getAllOrders(): Promise<OrderRecord[]> {
-  const { data: orders, error } = await supabaseAdmin!
+  const { data: orders, error } = await requireAdmin()
     .from('orders')
     .select('*, order_items(*)')
     .order('created_at', { ascending: false });
@@ -229,7 +241,7 @@ export async function getAllOrders(): Promise<OrderRecord[]> {
 export async function getOrderByRazorpayOrderId(
   razorpayOrderId: string
 ): Promise<OrderRecord | null> {
-  const { data: order, error } = await supabaseAdmin!
+  const { data: order, error } = await requireAdmin()
     .from('orders')
     .select('*, order_items(*)')
     .eq('razorpay_order_id', razorpayOrderId)
@@ -242,7 +254,7 @@ export async function getOrderByRazorpayOrderId(
 export async function getOrderByRazorpayPaymentId(
   razorpayPaymentId: string
 ): Promise<OrderRecord | null> {
-  const { data: order, error } = await supabaseAdmin!
+  const { data: order, error } = await requireAdmin()
     .from('orders')
     .select('*, order_items(*)')
     .eq('razorpay_payment_id', razorpayPaymentId)

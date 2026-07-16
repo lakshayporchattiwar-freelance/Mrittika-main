@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { requireAdmin } from '@/lib/supabase';
 import { createShiprocketOrder } from '@/lib/shiprocket';
 import { updateOrder } from '@/lib/orderStore';
 
 export async function POST(req: NextRequest) {
-  const { data: failedOrders, error } = await supabaseAdmin!
+  const { data: failedOrders, error } = await requireAdmin()
     .from('orders')
     .select('*, order_items(*)')
     .eq('shiprocket_sync_status', 'failed');
@@ -48,13 +48,13 @@ export async function POST(req: NextRequest) {
         awbNumber: result.awbNumber,
         courierName: result.courierName,
       });
-      await supabaseAdmin!
+      await requireAdmin()
         .from('orders')
         .update({ shiprocket_sync_status: 'success', shiprocket_error: null })
         .eq('id', order.id);
       results.push({ orderId: order.id, status: 'success' });
     } catch (err: any) {
-      await supabaseAdmin!
+      await requireAdmin()
         .from('orders')
         .update({ shiprocket_error: err.message })
         .eq('id', order.id);

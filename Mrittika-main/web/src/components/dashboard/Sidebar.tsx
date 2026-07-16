@@ -19,6 +19,7 @@ import {
   LogOut,
   Leaf,
   Sprout,
+  Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +30,7 @@ const mainNav = [
   { href: "/dashboard/inventory", label: "Inventory", icon: Archive, badge: "inventory" },
   { href: "/dashboard/customers", label: "Customers", icon: Users },
   { href: "/dashboard/leads", label: "Leads", icon: MessageCircle, badge: "leads" },
+  { href: "/dashboard/reviews", label: "Reviews", icon: Star },
   { href: "/dashboard/coupons", label: "Coupons", icon: Tag },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/dashboard/blog", label: "Blog", icon: BookOpen },

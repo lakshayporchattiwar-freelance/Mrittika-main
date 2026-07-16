@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { saveOrder, updateOrder } from '@/lib/orderStore';
 import { createShiprocketOrder } from '@/lib/shiprocket';
 import { sendOrderConfirmationEmail } from '@/lib/notifications';
-import { supabaseAdmin } from '@/lib/supabase';
+import { requireAdmin } from '@/lib/supabase';
 
 export async function POST(req: NextRequest) {
   console.log('[VERIFY] Payment verification started');
@@ -47,24 +47,53 @@ export async function POST(req: NextRequest) {
 
   const orderId = internalOrderId || `MRT-${Date.now()}`;
 
-  const itemsSubtotal = (orderData?.items || []).reduce((sum: number, item: any) => sum + (item.price * item.qty), 0);
+  const items = orderData?.items || [];
+  const customer = orderData?.customer;
+
+  if (!items.length || !customer?.email || !customer?.firstName) {
+    console.error('[VERIFY] Missing order data:', {
+      hasItems: items.length,
+      hasCustomer: !!customer,
+      hasEmail: !!customer?.email,
+      hasName: !!customer?.firstName,
+    });
+    return NextResponse.json({
+      success: false,
+      error: 'Missing order information. Please contact support with payment ID: ' + razorpay_payment_id,
+    }, { status: 400 });
+  }
+
+  const itemsSubtotal = items.reduce((sum: number, item: any) => sum + (item.price * item.qty), 0);
   const shippingCharge = itemsSubtotal >= 499 ? 0 : 49;
+  const codCharge = 0;
+  const discountAmt = orderData?.discountAmount || 0;
+  const computedTotal = orderData?.total || (itemsSubtotal - discountAmt + shippingCharge + codCharge);
 
   const orderRecord = {
     id: orderId,
     razorpayOrderId: razorpay_order_id,
     razorpayPaymentId: razorpay_payment_id,
     paymentMethod: 'Prepaid',
-    items: orderData?.items || [],
-    customer: orderData?.customer || {},
+    items,
+    customer,
     subtotal: itemsSubtotal,
-    shippingCharge: shippingCharge,
-    total: orderData?.total || 0,
+    shippingCharge,
+    total: computedTotal,
     couponCode: orderData?.couponCode || null,
-    discountAmount: orderData?.discountAmount || 0,
+    discountAmount: discountAmt,
     status: 'Order Confirmed',
     createdAt: new Date().toISOString(),
   };
+
+  console.log('[VERIFY] Order record prepared:', {
+    id: orderId,
+    items: items.length,
+    customer: customer.email,
+    subtotal: itemsSubtotal,
+    shipping: shippingCharge,
+    total: computedTotal,
+    discount: discountAmt,
+  });
 
   try {
     await saveOrder(orderRecord);
@@ -91,7 +120,7 @@ export async function POST(req: NextRequest) {
       courierName: shiprocketResult.courierName,
     });
 
-    await supabaseAdmin!
+    await requireAdmin()
       .from('orders')
       .update({ shiprocket_sync_status: 'success', shiprocket_error: null })
       .eq('id', orderId);
@@ -104,7 +133,7 @@ export async function POST(req: NextRequest) {
   } catch (shiprocketError: any) {
     console.error('[VERIFY] SHIPROCKET FAILED:', shiprocketError.message);
 
-    await supabaseAdmin!
+    await requireAdmin()
       .from('orders')
       .update({ shiprocket_sync_status: 'failed', shiprocket_error: shiprocketError.message })
       .eq('id', orderId);
@@ -119,21 +148,21 @@ export async function POST(req: NextRequest) {
 
   if (orderData?.couponCode) {
     try {
-      await supabaseAdmin!.rpc('increment_coupon_usage', { coupon_code: orderData.couponCode });
+      await requireAdmin().rpc('increment_coupon_usage', { coupon_code: orderData.couponCode });
       console.log('[VERIFY] Coupon usage incremented ✓', orderData.couponCode);
     } catch (couponErr: any) {
       console.error('[VERIFY] Coupon increment failed (non-blocking):', couponErr.message);
     }
 
     try {
-      const { data: couponRec } = await supabaseAdmin!
+      const { data: couponRec } = await requireAdmin()
         .from('coupons')
         .select('id')
         .eq('code', orderData.couponCode.toUpperCase())
         .single();
 
       if (couponRec) {
-        await supabaseAdmin!.from('coupon_redemptions').insert({
+        await requireAdmin().from('coupon_redemptions').insert({
           coupon_id: couponRec.id,
           user_email: orderData.customer.email.trim().toLowerCase(),
           order_id: orderId,

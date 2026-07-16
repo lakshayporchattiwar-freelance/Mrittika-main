@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { requireAdmin } from '@/lib/supabase';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'slug is required' }, { status: 400 });
   }
 
-  const { data: reviews, error } = await supabaseAdmin!
+  const { data: reviews, error } = await requireAdmin()
     .from('reviews')
     .select('*')
     .eq('product_slug', slug)
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Review must be at least 10 characters' }, { status: 400 });
   }
 
-  const { data, error } = await supabaseAdmin!
+  const { data, error } = await requireAdmin()
     .from('reviews')
     .insert({
       product_slug: productSlug,

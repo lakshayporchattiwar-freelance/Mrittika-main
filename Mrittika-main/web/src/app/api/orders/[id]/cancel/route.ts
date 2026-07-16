@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getOrderById } from '@/lib/orderStore';
 import { cancelShiprocketOrder } from '@/lib/shiprocket';
 import { refundRazorpayPayment } from '@/lib/razorpay';
-import { supabaseAdmin } from '@/lib/supabase';
+import { requireAdmin } from '@/lib/supabase';
 import { sendOrderCancellationEmail } from '@/lib/notifications';
 
 export async function POST(
@@ -115,7 +115,7 @@ export async function POST(
     dbUpdates.refund_amount = order.total;
   }
 
-  const { error: updateError } = await supabaseAdmin!
+  const { error: updateError } = await requireAdmin()
     .from('orders')
     .update(dbUpdates)
     .eq('id', orderId);

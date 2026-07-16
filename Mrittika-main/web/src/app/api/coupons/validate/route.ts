@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { requireAdmin } from '@/lib/supabase';
 
 export async function POST(req: NextRequest) {
   let body: any;
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   const normalizedCode = code.trim().toUpperCase();
   const normalizedEmail = (email || '').trim().toLowerCase();
 
-  const { data: coupon, error } = await supabaseAdmin!
+  const { data: coupon, error } = await requireAdmin()
     .from('coupons')
     .select('*')
     .eq('code', normalizedCode)
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (normalizedEmail) {
-    const { count } = await supabaseAdmin!
+    const { count } = await requireAdmin()
       .from('coupon_redemptions')
       .select('id', { count: 'exact', head: true })
       .eq('coupon_id', coupon.id)

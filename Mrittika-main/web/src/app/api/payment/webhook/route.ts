@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { updateOrder, getOrderByRazorpayOrderId, getOrderByRazorpayPaymentId } from "@/lib/orderStore";
-import { supabaseAdmin } from "@/lib/supabase";
+import { requireAdmin } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
       console.log("[WEBHOOK] Refund processed:", refundId, "for payment:", paymentId);
 
       if (paymentId) {
-        const { error } = await supabaseAdmin!
+        const { error } = await requireAdmin()
           .from("orders")
           .update({ refund_status: "processed" })
           .eq("razorpay_payment_id", paymentId);
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
       console.error("[WEBHOOK] Refund failed for payment:", paymentId);
 
       if (paymentId) {
-        await supabaseAdmin!
+        await requireAdmin()
           .from("orders")
           .update({ refund_status: "failed" })
           .eq("razorpay_payment_id", paymentId);

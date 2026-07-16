@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { requireAdmin } from '@/lib/supabase';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 
   const normalizedEmail = email.trim().toLowerCase();
 
-  const { data: orders, error } = await supabaseAdmin!
+  const { data: orders, error } = await requireAdmin()
     .from('orders')
     .select('*, order_items(*)')
     .ilike('customer_email', normalizedEmail)
