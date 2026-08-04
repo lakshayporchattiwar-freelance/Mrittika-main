@@ -39,7 +39,7 @@ export async function getShopProducts(): Promise<ShopProduct[]> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
 
   return products.map((p: any) => {
-    const resolvedImages = (p.images || []).map((url: string) => {
+    const resolvedImages = (p.images && p.images.length > 0 ? p.images : (p.image_url ? [p.image_url] : [])).map((url: string) => {
       if (!url) return url
       if (url.startsWith("http://") || url.startsWith("https://")) return url
       if (url.startsWith("/")) return `${supabaseUrl}/storage/v1/object/public${url}`

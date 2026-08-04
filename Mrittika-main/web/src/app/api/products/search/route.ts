@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await supabase
       .from('products')
-      .select('id, name, slug, price, description, images')
+      .select('id, name, slug, price, description, images, image_url')
       .eq('is_active', true)
       .in('slug', slugList)
 
@@ -27,20 +27,22 @@ export async function GET(req: NextRequest) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 
     const products = (data || []).map((p: any) => {
-      const resolvedImages = (p.images || []).map((url: string) => {
+      const sourceImages = p.images && p.images.length > 0 ? p.images : (p.image_url ? [p.image_url] : [])
+      const resolvedImages = sourceImages.map((url: string) => {
         if (!url) return url
         if (url.startsWith('http://') || url.startsWith('https://')) return url
         if (url.startsWith('/')) return `${supabaseUrl}/storage/v1/object/public${url}`
         return url
       })
+      const fallback = `/images/products/${p.slug}.webp`
       return {
         id: p.id,
         name: p.name,
         slug: p.slug,
         price: p.price,
         shortDescription: p.description || '',
-        image: resolvedImages[0] || `/images/products/${p.slug}.webp`,
-        images: resolvedImages.length > 0 ? resolvedImages : [`/images/products/${p.slug}.webp`],
+        image: resolvedImages[0] || fallback,
+        images: resolvedImages.length > 0 ? resolvedImages : [fallback],
       }
     })
 

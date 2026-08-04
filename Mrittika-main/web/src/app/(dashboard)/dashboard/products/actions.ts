@@ -3,16 +3,6 @@
 import { adminSupabase } from "@/utils/supabase/admin"
 import { revalidatePath } from "next/cache"
 
-function resolveImageUrl(url: string): string {
-  if (!url) return url
-  if (url.startsWith("http://") || url.startsWith("https://")) return url
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  if (url.startsWith("/")) {
-    return `${supabaseUrl}/storage/v1/object/public${url}`
-  }
-  return url
-}
-
 export async function upsertProduct(product: {
   id?: string
   name: string
@@ -34,8 +24,6 @@ export async function upsertProduct(product: {
     finalStatus = "Active"
   }
 
-  const resolvedImages = (product.images || []).map(resolveImageUrl)
-
   const row: Record<string, unknown> = {
     name: product.name,
     slug: product.slug,
@@ -47,8 +35,12 @@ export async function upsertProduct(product: {
     stock_quantity: product.stock_quantity,
     status: finalStatus,
     featured: product.featured || false,
-    images: resolvedImages,
+    images: product.images || [],
     updated_at: new Date().toISOString(),
+  }
+
+  if (product.images && product.images.length > 0) {
+    row.image_url = product.images[0]
   }
 
   let error
@@ -65,6 +57,9 @@ export async function upsertProduct(product: {
   revalidatePath("/dashboard/products")
   revalidatePath("/dashboard/inventory")
   revalidatePath("/dashboard/overview")
+  revalidatePath("/")
+  revalidatePath("/shop")
+  revalidatePath("/product/[slug]")
   return { success: true }
 }
 
@@ -78,5 +73,8 @@ export async function deleteProduct(productId: string) {
   revalidatePath("/dashboard/products")
   revalidatePath("/dashboard/inventory")
   revalidatePath("/dashboard/overview")
+  revalidatePath("/")
+  revalidatePath("/shop")
+  revalidatePath("/product/[slug]")
   return { success: true }
 }

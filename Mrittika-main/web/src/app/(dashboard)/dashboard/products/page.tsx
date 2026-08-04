@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from "react"
 import { createClient } from "@/utils/supabase/client"
 import {
   Search,
-  Leaf,
   Pencil,
   Trash2,
   Plus,
@@ -43,13 +42,24 @@ import { upsertProduct, deleteProduct } from "./actions"
 import { cn } from "@/lib/utils"
 
 function resolveImageUrl(url: string): string {
-  if (!url) return url
+  if (!url) return ""
   if (url.startsWith("http://") || url.startsWith("https://")) return url
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  if (url.startsWith("/")) {
+  if (url.startsWith("/images/")) return url
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (supabaseUrl && url.startsWith("/")) {
     return `${supabaseUrl}/storage/v1/object/public${url}`
   }
   return url
+}
+
+function getProductImage(product: Product): string {
+  if (product.images && product.images.length > 0) {
+    return resolveImageUrl(product.images[0])
+  }
+  if (product.image_url) {
+    return resolveImageUrl(product.image_url)
+  }
+  return `/images/products/${product.slug}.webp`
 }
 
 interface Product {
@@ -65,6 +75,7 @@ interface Product {
   status: string
   featured?: boolean
   images?: string[]
+  image_url?: string
   created_at: string
   updated_at?: string
 }
@@ -362,19 +373,13 @@ export default function ProductsPage() {
             className="overflow-hidden rounded-xl border border-brand-sand bg-white transition-shadow hover:shadow-md"
           >
             <div className="relative aspect-square bg-brand-mist">
-              {product.images && product.images.length > 0 ? (
-                <img
-                  src={resolveImageUrl(product.images[0])}
-                  alt={product.name}
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-brand-charcoal/30">
-                  <Leaf className="h-12 w-12" />
-                  <span className="text-sm">No image</span>
-                </div>
-              )}
+              <img
+                src={getProductImage(product)}
+                alt={product.name}
+                className="h-full w-full object-cover"
+                loading="lazy"
+                onError={(e) => { (e.target as HTMLImageElement).src = `/images/products/${product.slug}.webp` }}
+              />
             </div>
             <div className="p-4 space-y-2">
               <h3 className="font-display font-medium text-brand-charcoal truncate">

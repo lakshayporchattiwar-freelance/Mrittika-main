@@ -71,17 +71,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Upload failed: ' + uploadError.message }, { status: 500 })
     }
 
-    const { data: urlData } = supabase.storage
-      .from('product-images')
-      .getPublicUrl(storagePath)
+    const relativePath = `/product-images/${storagePath}`
 
-    const publicUrl = urlData?.publicUrl || ''
-
-    console.log('[UPLOAD] File uploaded successfully:', publicUrl)
+    console.log('[UPLOAD] File uploaded successfully:', relativePath)
 
     return NextResponse.json({
       success: true,
-      url: publicUrl,
+      url: relativePath,
       path: storagePath,
       type: isVideo ? 'video' : 'image',
     })

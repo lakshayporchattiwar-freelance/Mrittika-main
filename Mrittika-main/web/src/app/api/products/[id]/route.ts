@@ -19,21 +19,23 @@ export async function GET(
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-  const resolvedImages = (product.images || []).map((url: string) => {
+  const sourceImages = product.images && product.images.length > 0 ? product.images : (product.image_url ? [product.image_url] : [])
+  const resolvedImages = sourceImages.map((url: string) => {
     if (!url) return url
     if (url.startsWith('http://') || url.startsWith('https://')) return url
     if (url.startsWith('/')) return `${supabaseUrl}/storage/v1/object/public${url}`
     return url
   })
 
+  const fallback = `/images/products/${product.slug}.webp`
   return NextResponse.json({
     product: {
       id: product.id,
       name: product.name,
       slug: product.slug,
       price: product.price,
-      image: resolvedImages[0] || `/images/products/${product.slug}.webp`,
-      images: resolvedImages,
+      image: resolvedImages[0] || fallback,
+      images: resolvedImages.length > 0 ? resolvedImages : [fallback],
     },
   })
 }

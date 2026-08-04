@@ -55,6 +55,7 @@ interface Product {
   status: string
   featured?: boolean
   images?: string[]
+  image_url?: string
   created_at: string
   updated_at?: string
 }
@@ -72,13 +73,24 @@ interface StockMovement {
 }
 
 function resolveImageUrl(url: string): string {
-  if (!url) return url
+  if (!url) return ""
   if (url.startsWith("http://") || url.startsWith("https://")) return url
+  if (url.startsWith("/images/")) return url
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   if (url.startsWith("/")) {
     return `${supabaseUrl}/storage/v1/object/public${url}`
   }
   return url
+}
+
+function getProductImage(product: Product): string {
+  if (product.images && product.images.length > 0) {
+    return resolveImageUrl(product.images[0])
+  }
+  if (product.image_url) {
+    return resolveImageUrl(product.image_url)
+  }
+  return `/images/products/${product.slug}.webp`
 }
 
 const stockColor = (qty: number) => {
@@ -282,18 +294,13 @@ export default function InventoryPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-brand-mist">
-                          {product.images && product.images.length > 0 ? (
-                            <img
-                              src={resolveImageUrl(product.images[0])}
-                              alt={product.name}
-                              className="h-full w-full object-cover"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center text-brand-charcoal/30">
-                              <Package className="h-4 w-4" />
-                            </div>
-                          )}
+                          <img
+                            src={getProductImage(product)}
+                            alt={product.name}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                            onError={(e) => { (e.target as HTMLImageElement).src = `/images/products/${product.slug}.webp` }}
+                          />
                         </div>
                         <span className="font-medium text-brand-charcoal truncate max-w-[200px]">
                           {product.name}
