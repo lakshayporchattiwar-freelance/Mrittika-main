@@ -105,6 +105,8 @@ export default function ProductsPage() {
   const [form, setForm] = useState({ ...defaultForm })
   const [newImageUrl, setNewImageUrl] = useState("")
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [productIdForUpload, setProductIdForUpload] = useState<string>("new")
 
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -136,6 +138,7 @@ export default function ProductsPage() {
   const openAddForm = () => {
     setEditingId(null)
     setForm({ ...defaultForm })
+    setProductIdForUpload(`new-${Date.now()}`)
     setFormOpen(true)
   }
 
@@ -220,6 +223,46 @@ export default function ProductsPage() {
       }))
       setNewImageUrl("")
     }
+  }
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    setUploading(true)
+    const uploadedUrls: string[] = []
+
+    for (const file of Array.from(files)) {
+      try {
+        const formData = new FormData()
+        formData.append("file", file)
+        formData.append("productId", editingId || productIdForUpload)
+
+        const res = await fetch("/api/upload/product", {
+          method: "POST",
+          body: formData,
+        })
+
+        const data = await res.json()
+        if (data.success && data.url) {
+          uploadedUrls.push(data.url)
+        } else {
+          toast.error(data.error || `Failed to upload ${file.name}`)
+        }
+      } catch (err) {
+        toast.error(`Failed to upload ${file.name}`)
+      }
+    }
+
+    if (uploadedUrls.length > 0) {
+      setForm((prev) => ({
+        ...prev,
+        images: [...prev.images, ...uploadedUrls],
+      }))
+      toast.success(`${uploadedUrls.length} file(s) uploaded`)
+    }
+    setUploading(false)
+    e.target.value = ""
   }
 
   const removeImage = (idx: number) => {
@@ -506,15 +549,23 @@ export default function ProductsPage() {
               <Label>Featured Product</Label>
             </div>
             <div>
-              <Label>Images</Label>
+              <Label>Images & Videos</Label>
               <div className="mt-2 flex flex-wrap gap-2">
                 {form.images.map((url, idx) => (
                   <div key={idx} className="relative">
-                    <img
-                      src={resolveImageUrl(url)}
-                      alt={`Image ${idx + 1}`}
-                      className="h-16 w-16 rounded-lg border border-brand-sand object-cover"
-                    />
+                    {url.endsWith('.webm') || url.endsWith('.mp4') ? (
+                      <video
+                        src={resolveImageUrl(url)}
+                        className="h-16 w-16 rounded-lg border border-brand-sand object-cover"
+                        muted
+                      />
+                    ) : (
+                      <img
+                        src={resolveImageUrl(url)}
+                        alt={`Image ${idx + 1}`}
+                        className="h-16 w-16 rounded-lg border border-brand-sand object-cover"
+                      />
+                    )}
                     <button
                       onClick={() => removeImage(idx)}
                       className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white"
@@ -524,17 +575,34 @@ export default function ProductsPage() {
                   </div>
                 ))}
               </div>
-              <div className="mt-2 flex gap-2">
-                <Input
-                  value={newImageUrl}
-                  onChange={(e) => setNewImageUrl(e.target.value)}
-                  placeholder="Paste image URL"
-                  className="flex-1"
-                />
-                <Button variant="outline" onClick={addImageUrl} type="button">
-                  <ImagePlus className="mr-1 h-4 w-4" />
-                  Add
-                </Button>
+              <div className="mt-3 space-y-2">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-brand-sand bg-brand-mist/30 px-4 py-2.5 text-sm font-medium text-brand-charcoal transition-colors hover:bg-brand-mist/60">
+                  <ImagePlus className="h-4 w-4" />
+                  {uploading ? "Uploading..." : "Upload Image / Video"}
+                  <input
+                    type="file"
+                    accept="image/*,video/*"
+                    multiple
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    disabled={uploading}
+                  />
+                </label>
+                <p className="text-xs text-brand-charcoal/40">
+                  Images auto-convert to WebP · Videos auto-convert to WebM · Max 10MB (image) / 50MB (video)
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    value={newImageUrl}
+                    onChange={(e) => setNewImageUrl(e.target.value)}
+                    placeholder="Or paste image URL"
+                    className="flex-1"
+                  />
+                  <Button variant="outline" onClick={addImageUrl} type="button" disabled={!newImageUrl.trim()}>
+                    <ImagePlus className="mr-1 h-4 w-4" />
+                    Add
+                  </Button>
+                </div>
               </div>
             </div>
             <Button

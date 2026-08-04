@@ -1,23 +1,39 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useCart } from "@/context/CartContext";
-import { products } from "@/data/products";
-import styles from "./ProductCTA.module.css";
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useCart } from "@/context/CartContext"
+import styles from "./ProductCTA.module.css"
 
 type ProductCTAProps = {
-  productId: string;
-};
+  productId: string
+}
+
+type ProductInfo = {
+  id: string
+  name: string
+  slug: string
+  price: number
+  image: string
+}
 
 export default function ProductCTA({ productId }: ProductCTAProps) {
-  const { addItem } = useCart();
-  const router = useRouter();
-  const product = products.find((p) => p.id === productId);
-  const [buyNowLoading, setBuyNowLoading] = useState(false);
+  const { addItem } = useCart()
+  const router = useRouter()
+  const [product, setProduct] = useState<ProductInfo | null>(null)
+  const [buyNowLoading, setBuyNowLoading] = useState(false)
+
+  useEffect(() => {
+    fetch(`/api/products/${productId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.product) setProduct(data.product)
+      })
+      .catch(() => {})
+  }, [productId])
 
   const handleAdd = () => {
-    if (!product) return;
+    if (!product) return
     addItem({
       id: product.id,
       name: product.name,
@@ -25,12 +41,12 @@ export default function ProductCTA({ productId }: ProductCTAProps) {
       price: product.price,
       qty: 1,
       image: product.image,
-    });
-  };
+    })
+  }
 
   const handleBuyNow = async () => {
-    if (!product) return;
-    setBuyNowLoading(true);
+    if (!product) return
+    setBuyNowLoading(true)
     addItem({
       id: product.id,
       name: product.name,
@@ -38,9 +54,17 @@ export default function ProductCTA({ productId }: ProductCTAProps) {
       price: product.price,
       qty: 1,
       image: product.image,
-    });
-    router.push("/checkout");
-  };
+    })
+    router.push("/checkout")
+  }
+
+  if (!product) {
+    return (
+      <div className={styles.cta}>
+        <button className="btn btn-primary btn-lg" disabled>Loading...</button>
+      </div>
+    )
+  }
 
   return (
     <div className={styles.cta}>
@@ -55,5 +79,5 @@ export default function ProductCTA({ productId }: ProductCTAProps) {
         {buyNowLoading ? "Processing..." : "Buy Now"}
       </button>
     </div>
-  );
+  )
 }

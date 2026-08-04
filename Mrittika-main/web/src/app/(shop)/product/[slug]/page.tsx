@@ -1,29 +1,31 @@
-import Image from "next/image";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import type { Metadata } from "next";
-import { products } from "@/data/products";
-import ProductCTA from "@/components/ProductCTA";
-import ProductGallery from "@/components/ProductGallery";
-import { ProductReviews } from "@/components/ReviewSection";
-import LiveProductRating from "@/components/LiveProductRating";
-import styles from "./product.module.css";
+import Image from "next/image"
+import Link from "next/link"
+import { notFound } from "next/navigation"
+import type { Metadata } from "next"
+import { getShopProducts } from "@/lib/shopProducts"
+import ProductCTA from "@/components/ProductCTA"
+import ProductGallery from "@/components/ProductGallery"
+import { ProductReviews } from "@/components/ReviewSection"
+import LiveProductRating from "@/components/LiveProductRating"
+import styles from "./product.module.css"
 
 type ProductPageProps = {
-  params: Promise<{ slug: string }>;
-};
+  params: Promise<{ slug: string }>
+}
 
 export async function generateStaticParams() {
-  return products.map((product) => ({ slug: product.slug }));
+  const products = await getShopProducts()
+  return products.map((product) => ({ slug: product.slug }))
 }
 
 export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const product = products.find((item) => item.slug === slug);
+  const { slug } = await params
+  const products = await getShopProducts()
+  const product = products.find((item) => item.slug === slug)
   if (!product) {
-    return { title: "Product Not Found — Mrittika" };
+    return { title: "Product Not Found — Mrittika" }
   }
   return {
     title: `${product.name} — Mrittika`,
@@ -33,22 +35,23 @@ export async function generateMetadata({
       description: product.shortDescription,
       images: [
         {
-          url: `https://mrittika-main.vercel.app${product.image}`,
+          url: product.image,
           width: 800,
           height: 800,
           alt: product.name,
         },
       ],
     },
-  };
+  }
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const { slug } = await params;
-  const product = products.find((item) => item.slug === slug);
+  const { slug } = await params
+  const products = await getShopProducts()
+  const product = products.find((item) => item.slug === slug)
 
   if (!product) {
-    notFound();
+    notFound()
   }
 
   return (
@@ -146,5 +149,5 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </div>
       </div>
     </section>
-  );
+  )
 }

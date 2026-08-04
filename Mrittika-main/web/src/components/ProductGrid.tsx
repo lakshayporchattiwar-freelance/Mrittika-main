@@ -1,10 +1,10 @@
-"use client";
+import ProductCard from "@/components/ProductCard"
+import { getShopProducts } from "@/lib/shopProducts"
+import styles from "./ProductGrid.module.css"
 
-import ProductCard from "@/components/ProductCard";
-import { products } from "@/data/products";
-import styles from "./ProductGrid.module.css";
+export default async function ProductGrid() {
+  const products = await getShopProducts()
 
-export default function ProductGrid() {
   return (
     <div className={styles.productGrid}>
       {products.map((product, index) => (
@@ -13,5 +13,5 @@ export default function ProductGrid() {
         </div>
       ))}
     </div>
-  );
+  )
 }

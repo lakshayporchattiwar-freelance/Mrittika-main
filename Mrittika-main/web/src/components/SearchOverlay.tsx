@@ -1,43 +1,60 @@
-"use client";
+"use client"
 
-import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
-import { products } from "@/data/products";
-import styles from "./SearchOverlay.module.css";
+import { useState, useEffect, useRef } from "react"
+import Link from "next/link"
+import styles from "./SearchOverlay.module.css"
 
 type SearchOverlayProps = {
-  open: boolean;
-  onClose: () => void;
-};
+  open: boolean
+  onClose: () => void
+}
+
+type SearchResult = {
+  id: string
+  name: string
+  slug: string
+  price: number
+  shortDescription: string
+}
 
 export default function SearchOverlay({ open, onClose }: SearchOverlayProps) {
-  const [query, setQuery] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [query, setQuery] = useState("")
+  const [results, setResults] = useState<SearchResult[]>([])
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (open) {
-      setQuery("");
-      setTimeout(() => inputRef.current?.focus(), 100);
+      setQuery("")
+      setTimeout(() => inputRef.current?.focus(), 100)
     }
-  }, [open]);
+  }, [open])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    if (open) window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+      if (e.key === "Escape") onClose()
+    }
+    if (open) window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [open, onClose])
 
-  const results = query.trim()
-    ? products.filter(
-        (p) =>
-          p.name.toLowerCase().includes(query.toLowerCase()) ||
-          p.shortDescription.toLowerCase().includes(query.toLowerCase())
-      )
-    : [];
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([])
+      return
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/products/search?q=${encodeURIComponent(query.trim())}`)
+        const data = await res.json()
+        setResults(data.products || [])
+      } catch {
+        setResults([])
+      }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [query])
 
-  if (!open) return null;
+  if (!open) return null
 
   return (
     <div className={styles.overlay}>
@@ -93,5 +110,5 @@ export default function SearchOverlay({ open, onClose }: SearchOverlayProps) {
         )}
       </div>
     </div>
-  );
+  )
 }

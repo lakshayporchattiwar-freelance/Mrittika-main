@@ -5,13 +5,23 @@ import Link from "next/link";
 import Image from "next/image";
 import { Heart } from "lucide-react";
 import { getWishlist, removeFromWishlist } from "@/lib/wishlist";
-import { products } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 import styles from "./wishlist.module.css";
+
+type WishlistProduct = {
+  id: string
+  name: string
+  slug: string
+  price: number
+  shortDescription: string
+  image: string
+  images: string[]
+}
 
 export default function WishlistPage() {
   const { addItem } = useCart();
   const [slugs, setSlugs] = useState<string[]>([]);
+  const [wishlisted, setWishlisted] = useState<WishlistProduct[]>([]);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -22,12 +32,21 @@ export default function WishlistPage() {
     return () => window.removeEventListener("wishlist-updated", sync);
   }, []);
 
+  useEffect(() => {
+    if (slugs.length === 0) {
+      setWishlisted([]);
+      return;
+    }
+    fetch(`/api/products/search?slugs=${slugs.join(",")}`)
+      .then((res) => res.json())
+      .then((data) => setWishlisted(data.products || []))
+      .catch(() => setWishlisted([]));
+  }, [slugs]);
+
   const handleRemove = (slug: string) => {
     removeFromWishlist(slug);
     setSlugs(getWishlist());
   };
-
-  const wishlisted = products.filter((p) => slugs.includes(p.slug));
 
   return (
     <section className={`section ${styles.wishlist}`}>
