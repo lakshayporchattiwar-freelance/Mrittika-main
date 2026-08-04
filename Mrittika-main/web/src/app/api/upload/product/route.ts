@@ -32,12 +32,12 @@ export async function POST(req: NextRequest) {
     const sanitized = file.name.replace(/[^a-zA-Z0-9.-]/g, '_').slice(0, 40)
     const storagePath = `products/${productId}/${timestamp}_${sanitized}.${ext}`
 
-    let arrayBuffer: ArrayBuffer
+    let uploadBody: Buffer | Uint8Array
 
     if (isImage) {
-      arrayBuffer = await convertImageToWebP(file)
+      uploadBody = await convertImageToWebP(file)
     } else {
-      arrayBuffer = await file.arrayBuffer()
+      uploadBody = new Uint8Array(await file.arrayBuffer())
     }
 
     const supabase = requireAdmin()
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 
     const { error: uploadError } = await supabase.storage
       .from('product-images')
-      .upload(storagePath, arrayBuffer, {
+      .upload(storagePath, uploadBody, {
         contentType: isVideo ? 'video/webm' : 'image/webp',
         upsert: true,
       })
@@ -87,16 +87,16 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function convertImageToWebP(file: File): Promise<ArrayBuffer> {
+async function convertImageToWebP(file: File): Promise<Buffer> {
   try {
     const sharp = await import('sharp')
-    const buffer = Buffer.from(await file.arrayBuffer())
-    const webpBuffer = await sharp.default(buffer)
+    const inputBuffer = Buffer.from(await file.arrayBuffer())
+    const webpBuffer = await sharp.default(inputBuffer)
       .webp({ quality: 80 })
       .toBuffer()
-    return webpBuffer.buffer as ArrayBuffer
+    return webpBuffer
   } catch (err: any) {
-    console.warn('[UPLOAD] Sharp not available, storing original file:', err.message)
-    return await file.arrayBuffer()
+    console.warn('[UPLOAD] Sharp not available, storing original as-is:', err.message)
+    return Buffer.from(await file.arrayBuffer())
   }
 }
