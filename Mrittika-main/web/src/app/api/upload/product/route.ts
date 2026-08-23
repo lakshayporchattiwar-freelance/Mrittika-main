@@ -28,24 +28,24 @@ export async function POST(req: NextRequest) {
     }
 
     const ext = isVideo ? 'webm' : 'webp'
+    const mimeType = isVideo ? 'video/webm' : 'image/webp'
     const timestamp = Date.now()
     const sanitized = file.name.replace(/[^a-zA-Z0-9.-]/g, '_').slice(0, 40)
     const storagePath = `products/${productId}/${timestamp}_${sanitized}.${ext}`
 
-    let uploadBody: Buffer | Uint8Array
+    let fileBody: Blob
 
     if (isImage) {
-      uploadBody = await convertImageToWebP(file)
+      const converted = await convertImageToWebP(file)
+      fileBody = new Blob([new Uint8Array(converted)], { type: mimeType })
     } else {
-      uploadBody = new Uint8Array(await file.arrayBuffer())
+      const bytes = new Uint8Array(await file.arrayBuffer())
+      fileBody = new Blob([bytes], { type: mimeType })
     }
 
     const supabase = requireAdmin()
 
-    const { data: bucketData, error: bucketError } = await supabase
-      .storage
-      .listBuckets()
-
+    const { data: bucketData } = await supabase.storage.listBuckets()
     const bucketExists = bucketData?.some((b: any) => b.name === 'product-images')
 
     if (!bucketExists) {
@@ -61,8 +61,8 @@ export async function POST(req: NextRequest) {
 
     const { error: uploadError } = await supabase.storage
       .from('product-images')
-      .upload(storagePath, uploadBody, {
-        contentType: isVideo ? 'video/webm' : 'image/webp',
+      .upload(storagePath, fileBody, {
+        contentType: mimeType,
         upsert: true,
       })
 
@@ -87,16 +87,16 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function convertImageToWebP(file: File): Promise<Buffer> {
+async function convertImageToWebP(file: File): Promise<Uint8Array> {
   try {
     const sharp = await import('sharp')
     const inputBuffer = Buffer.from(await file.arrayBuffer())
     const webpBuffer = await sharp.default(inputBuffer)
       .webp({ quality: 80 })
       .toBuffer()
-    return webpBuffer
+    return new Uint8Array(webpBuffer)
   } catch (err: any) {
     console.warn('[UPLOAD] Sharp not available, storing original as-is:', err.message)
-    return Buffer.from(await file.arrayBuffer())
+    return new Uint8Array(await file.arrayBuffer())
   }
 }
