@@ -11,6 +11,9 @@ export type Product = {
   description?: string;
   ingredients?: string[];
   howToUse?: string[];
+  category?: string;
+  isNew?: boolean;
+  weight?: number;
 };
 
 export const products: Product[] = [
@@ -37,6 +40,7 @@ export const products: Product[] = [
       "Apply evenly on cleansed face and neck.",
       "Leave on for 15 minutes, then wash off with lukewarm water using gentle circular motions.",
     ],
+    category: "Face",
   },
   {
     id: "p2",
@@ -61,6 +65,7 @@ export const products: Product[] = [
       "Spread a thin, even layer across face and décolletage.",
       "Relax for 15–20 minutes, then rinse with cool water for a soft, dewy finish.",
     ],
+    category: "Face",
   },
   {
     id: "p3",
@@ -85,5 +90,39 @@ export const products: Product[] = [
       "Apply on the T-zone and oily areas of the face.",
       "Allow to dry for 10–12 minutes, then wash off with cold water to tighten pores.",
     ],
+    category: "Face",
+  },
+  {
+    id: "p4",
+    name: "Mrittika Soft Glow Soap",
+    slug: "soft-glow-soap",
+    price: 130,
+    rating: 0,
+    reviewCount: 0,
+    shortDescription:
+      "Natural soap enriched with Manjistha, Mulethi & Chandan for de-tanning and radiant skin. Suitable for face and body.",
+    image: "/images/products/soft-glow-soap.webp",
+    images: [
+      "/images/products/soft-glow-soap.webp",
+    ],
+    description:
+      "Mrittika Soft Glow Soap is crafted from the same potent botanicals that make our Soft Glow Face Pack so beloved. Enriched with Manjistha for blood purification and complexion brightening, Mulethi for deep de-pigmentation, Masoor Dal for gentle exfoliation, Chandan (Sandalwood) powder for its cooling and anti-inflammatory properties, and Rose Powder for natural fragrance and skin softening — this soap is a complete daily ritual for your face and body. Use it twice a day followed by a moisturiser for visibly brighter, de-tanned, and dullness-free skin within weeks.",
+    ingredients: [
+      "Manjistha (Indian Madder) — brightens complexion, purifies skin",
+      "Mulethi (Licorice Root) — reduces pigmentation and dark spots",
+      "Masoor Dal (Red Lentil) — gentle exfoliation and glow",
+      "Chandan Powder (Sandalwood) — cooling, anti-inflammatory",
+      "Rose Powder — softens skin, natural fragrance",
+    ],
+    howToUse: [
+      "Wet your face and/or body with lukewarm water",
+      "Lather the soap between your palms and apply gently in circular motions",
+      "Leave on for 30 seconds for maximum benefit",
+      "Rinse thoroughly with water",
+      "Pat dry and apply a moisturiser immediately after",
+    ],
+    category: "Body",
+    isNew: true,
+    weight: 0.10,
   },
 ];

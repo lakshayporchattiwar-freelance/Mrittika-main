@@ -115,7 +115,10 @@ export async function createShiprocketOrder(order: any): Promise<{
     length: 12,
     breadth: 12,
     height: 6,
-    weight: order.items.reduce((sum: number, item: any) => sum + (0.25 * item.qty), 0) || 0.25,
+    weight: order.items.reduce((sum: number, item: any) => {
+      const productWeight = item.slug === 'soft-glow-soap' ? 0.10 : 0.25;
+      return sum + (productWeight * item.qty);
+    }, 0) || 0.25,
   };
 
   console.log('[SHIPROCKET] Sending payload:', JSON.stringify(payload, null, 2));

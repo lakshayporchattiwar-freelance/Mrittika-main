@@ -13,6 +13,8 @@ export interface ShopProduct {
   description?: string
   ingredients?: string[]
   howToUse?: string[]
+  category?: string
+  weight?: number
 }
 
 export async function getShopProducts(): Promise<ShopProduct[]> {
@@ -64,6 +66,8 @@ export async function getShopProducts(): Promise<ShopProduct[]> {
       description: p.description || undefined,
       ingredients: p.ingredients || undefined,
       howToUse: p.how_to_use || undefined,
+      category: p.category || undefined,
+      weight: p.weight || undefined,
     }
   })
 }

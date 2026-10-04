@@ -65,6 +65,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           loading={priority ? "eager" : "lazy"}
           priority={priority}
         />
+        {product.isNew && <span className={styles.newBadge}>New</span>}
         <WishlistButton slug={product.slug} />
       </Link>
       <div className={styles.body}>

@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { getShopProducts } from "@/lib/shopProducts"
 import ProductCard from "@/components/ProductCard"
 import styles from "./shop.module.css"
@@ -5,12 +8,26 @@ import styles from "./shop.module.css"
 const categories = ["All", "Face", "Body", "Bundles"] as const
 type Category = (typeof categories)[number]
 
-const comingSoonCategories: Category[] = ["Body", "Bundles"]
+const comingSoonCategories: Category[] = ["Bundles"]
 
-export default async function ShopPage() {
-  const products = await getShopProducts()
+export default function ShopPage() {
+  const [products, setProducts] = useState<any[]>([]);
+  const [activeCategory, setActiveCategory] = useState<Category>("All");
+  const [loading, setLoading] = useState(true);
 
-  const visibleProducts = products
+  useEffect(() => {
+    getShopProducts().then((data) => {
+      setProducts(data);
+      setLoading(false);
+    });
+  }, []);
+
+  const filteredProducts = activeCategory === "All"
+    ? products
+    : products.filter((p) => p.category === activeCategory);
+
+  const isComingSoon = comingSoonCategories.includes(activeCategory);
+  const visibleProducts = isComingSoon ? [] : filteredProducts;
 
   return (
     <section className={`section ${styles.shop}`}>
@@ -25,9 +42,15 @@ export default async function ShopPage() {
             {categories.map((label) => (
               <button
                 key={label}
-                className={`${styles.filter} ${label === "All" || label === "Face" ? styles.filterActive : ""}`}
+                className={`${styles.filter} ${activeCategory === label ? styles.filterActive : ""}`}
+                onClick={() => setActiveCategory(label)}
               >
                 {label}
+                {label !== "All" && label !== "Bundles" && (
+                  <span className={styles.count}>
+                    {products.filter((p) => p.category === label).length}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -41,29 +64,27 @@ export default async function ShopPage() {
           </div>
         </div>
 
-        {comingSoonCategories.includes("Body") ? null : null}
-
-        <>
-          <p className={styles.count}>
-            Showing {visibleProducts.length} products
-          </p>
-
-          <div className={styles.grid}>
-            {visibleProducts.map((product, index) => (
-              <ProductCard key={product.id} product={product} priority={index === 0} />
-            ))}
+        {isComingSoon ? (
+          <div className={styles.comingSoon}>
+            <span className={styles.comingSoonIcon}>🌿</span>
+            <h2>Products Coming Soon</h2>
+            <p className="text-muted">
+              We&apos;re crafting something special for your skin. Stay tuned.
+            </p>
           </div>
+        ) : (
+          <>
+            <p className={styles.count}>
+              Showing {visibleProducts.length} products
+            </p>
 
-          {visibleProducts.length === 0 && (
-            <div className={styles.comingSoon}>
-              <span className={styles.comingSoonIcon}>🌿</span>
-              <h2>Products Coming Soon</h2>
-              <p className="text-muted">
-                We&apos;re crafting something special for your skin. Stay tuned.
-              </p>
+            <div className={styles.grid}>
+              {visibleProducts.map((product, index) => (
+                <ProductCard key={product.id} product={product} priority={index === 0} />
+              ))}
             </div>
-          )}
-        </>
+          </>
+        )}
       </div>
     </section>
   )
