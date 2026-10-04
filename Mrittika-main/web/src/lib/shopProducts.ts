@@ -24,7 +24,7 @@ export async function getShopProducts(): Promise<ShopProduct[]> {
     { data: products },
     { data: reviews },
   ] = await Promise.all([
-    supabase.from("products").select("*").eq("is_active", true).eq("status", "Active").order("created_at", { ascending: false }),
+    supabase.from("products").select("*").eq("status", "Active").order("created_at", { ascending: false }),
     supabase.from("reviews").select("product_slug, rating"),
   ])
 
