@@ -23,6 +23,21 @@ export interface ShopProduct {
   isNew?: boolean
 }
 
+function normalizeCategory(p: any): string | undefined {
+  const raw = (p.category || "").trim()
+  const lower = raw.toLowerCase()
+  if (lower.includes("face")) return "Face"
+  if (lower.includes("body") || lower.includes("soap")) return "Body"
+  if (lower.includes("bundle") || lower.includes("kit")) return "Bundles"
+  if (raw) return raw
+  const slug = (p.slug || "").toLowerCase()
+  const name = (p.name || "").toLowerCase()
+  if (slug.includes("face") || name.includes("face pack") || name.includes("face-pack")) return "Face"
+  if (slug.includes("soap") || name.includes("soap")) return "Body"
+  if (slug.includes("bundle") || name.includes("bundle")) return "Bundles"
+  return undefined
+}
+
 export async function getShopProducts(): Promise<ShopProduct[]> {
   const supabase = requireAdmin()
 
@@ -75,7 +90,7 @@ export async function getShopProducts(): Promise<ShopProduct[]> {
       ingredients: p.ingredients || undefined,
       howToUse: p.how_to_use || undefined,
       goodToKnow: p.good_to_know || undefined,
-      category: p.category || undefined,
+      category: normalizeCategory(p),
       weight: p.weight || undefined,
       stockQuantity: p.stock_quantity ?? p.stock ?? undefined,
       status: p.status || undefined,
