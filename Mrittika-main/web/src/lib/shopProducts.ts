@@ -5,16 +5,22 @@ export interface ShopProduct {
   name: string
   slug: string
   price: number
+  comparePrice?: number
   rating: number
   reviewCount: number
   shortDescription: string
   image: string
   images: string[]
   description?: string
+  benefits?: string[]
   ingredients?: string[]
   howToUse?: string[]
+  goodToKnow?: string
   category?: string
   weight?: number
+  stockQuantity?: number
+  status?: string
+  isNew?: boolean
 }
 
 export async function getShopProducts(): Promise<ShopProduct[]> {
@@ -58,16 +64,22 @@ export async function getShopProducts(): Promise<ShopProduct[]> {
       name: p.name,
       slug: p.slug,
       price: p.price,
+      comparePrice: p.compare_price || undefined,
       rating: avgRating,
       reviewCount: revCount,
       shortDescription: p.description || "",
       image: primaryImage,
       images: resolvedImages.length > 0 ? resolvedImages : [primaryImage],
       description: p.description || undefined,
+      benefits: p.benefits || undefined,
       ingredients: p.ingredients || undefined,
       howToUse: p.how_to_use || undefined,
+      goodToKnow: p.good_to_know || undefined,
       category: p.category || undefined,
       weight: p.weight || undefined,
+      stockQuantity: p.stock_quantity ?? p.stock ?? undefined,
+      status: p.status || undefined,
+      isNew: p.is_new || undefined,
     }
   })
 }

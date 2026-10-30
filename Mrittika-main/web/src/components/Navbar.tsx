@@ -52,7 +52,11 @@ export default function Navbar() {
       <header className={`${styles.header} ${scrolled ? styles.scrolled : ""}`}>
         <div className={`container ${styles.glassBar}`}>
           <Link href="/" className={styles.logo}>
-            <Image src="/images/mrittika-logo.png" alt="Mrittika" width={120} height={40} className={styles.logoImage} priority />
+            <Image src="/images/mrittika-logo.png" alt="Mrittika Skin Rituals logo" width={120} height={40} className={styles.logoImage} priority />
+            <span className={styles.brandName}>
+              <span className={styles.brandFull}>Mrittika Skin Rituals</span>
+              <span className={styles.brandShort}>Mrittika</span>
+            </span>
           </Link>
 
           <nav className={styles.links} aria-label="Primary">

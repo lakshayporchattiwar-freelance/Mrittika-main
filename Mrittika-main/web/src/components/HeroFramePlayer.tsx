@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import Link from "next/link";
 import {
   HERO_FRAME_CONFIG,
   getFramePath,
@@ -18,6 +19,14 @@ export function HeroFramePlayer() {
   const playingRef = useRef(false);
   const loaderHiddenRef = useRef(false);
   const sizeRef = useRef({ cw: 1, ch: 1, dpr: 1 });
+  const replayRef = useRef<() => void>(() => {});
+  const [showOverlay, setShowOverlay] = useState(false);
+
+  const USP = {
+    headline: "Handcrafted botanical skincare, made in small batches.",
+    supporting: "Simple rituals with ingredients from nature.",
+    button: "Shop Now",
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -29,6 +38,9 @@ export function HeroFramePlayer() {
       `(max-width: ${HERO_FRAME_CONFIG.mobileBreakpoint}px)`
     );
     isMobileRef.current = mql.matches;
+
+    const reduceMql = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const isReduced = reduceMql.matches;
 
     function syncCanvasSize() {
       const dpr = window.devicePixelRatio || 1;
@@ -116,12 +128,28 @@ export function HeroFramePlayer() {
     function beginAnimation() {
       if (playingRef.current) return;
       playingRef.current = true;
+      setShowOverlay(false);
       syncCanvasSize();
       drawFrame(1);
       hideLoader();
       lastTickRef.current = performance.now();
       rafRef.current = requestAnimationFrame(tick);
     }
+
+    function replay() {
+      cancelAnimationFrame(rafRef.current);
+      playingRef.current = false;
+      frameRef.current = 1;
+      setShowOverlay(false);
+      syncCanvasSize();
+      drawFrame(1);
+      hideLoader();
+      lastTickRef.current = performance.now();
+      playingRef.current = true;
+      rafRef.current = requestAnimationFrame(tick);
+    }
+
+    replayRef.current = replay;
 
     function tick(now: number) {
       const interval = 1000 / HERO_FRAME_CONFIG.fps;
@@ -130,7 +158,14 @@ export function HeroFramePlayer() {
       if (elapsed >= interval) {
         lastTickRef.current = now - (elapsed % interval);
         const total = getTotalFrames(isMobileRef.current);
-        const next = frameRef.current >= total ? 1 : frameRef.current + 1;
+        if (frameRef.current >= total) {
+          cancelAnimationFrame(rafRef.current);
+          playingRef.current = false;
+          drawFrame(total);
+          setShowOverlay(true);
+          return;
+        }
+        const next = frameRef.current + 1;
 
         if (isFrameReady(next)) {
           frameRef.current = next;
@@ -157,6 +192,27 @@ export function HeroFramePlayer() {
       preloadRange(1, batchSize, mobile, total);
       const firstFrame = preloadFrame(1, mobile);
 
+      if (isReduced) {
+        // skip animation: show last frame + overlay
+        const lastFrame = preloadFrame(total, mobile);
+        const show = () => {
+          syncCanvasSize();
+          drawFrame(total);
+          hideLoader();
+          setShowOverlay(true);
+        };
+        if (lastFrame.complete && lastFrame.naturalWidth > 0) {
+          show();
+        } else {
+          lastFrame.addEventListener('load', show, { once: true });
+          lastFrame.addEventListener('error', () => {
+            hideLoader();
+            setShowOverlay(true);
+          }, { once: true });
+        }
+        return;
+      }
+
       if (firstFrame.complete && firstFrame.naturalWidth > 0) {
         beginAnimation();
       } else {
@@ -164,7 +220,10 @@ export function HeroFramePlayer() {
           once: true,
         });
         firstFrame.addEventListener('error', () => {
-          setTimeout(() => beginAnimation(), 500);
+          setTimeout(() => {
+            beginAnimation();
+            setTimeout(() => setShowOverlay(true), 1000);
+          }, 500);
         }, { once: true });
       }
 
@@ -292,6 +351,8 @@ export function HeroFramePlayer() {
           touchAction: 'pan-y',
           pointerEvents: 'none',
           willChange: 'transform',
+          transform: 'scale(1.06)',
+          transformOrigin: 'center center',
         }}
       />
 
@@ -303,8 +364,34 @@ export function HeroFramePlayer() {
         }}
       />
 
-
-
+      {showOverlay && (
+        <div
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-6"
+          style={{
+            background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 100%)',
+            opacity: showOverlay ? 1 : 0,
+            transition: 'opacity 0.5s ease',
+            pointerEvents: 'auto',
+          }}
+        >
+          <h1 className="text-white text-3xl md:text-5xl font-bold mb-3 drop-shadow-lg">
+            {USP.headline}
+          </h1>
+          <p className="text-white/90 text-base md:text-xl mb-6 max-w-xl drop-shadow">
+            {USP.supporting}
+          </p>
+          <Link href="/shop" className="btn btn-primary btn-lg">
+            {USP.button}
+          </Link>
+          <button
+            onClick={() => replayRef.current?.()}
+            aria-label="Replay video"
+            className="absolute bottom-6 right-6 w-10 h-10 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition"
+          >
+            ↻
+          </button>
+        </div>
+      )}
 
     </section>
   );

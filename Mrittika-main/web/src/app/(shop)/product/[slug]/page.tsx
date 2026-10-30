@@ -2,11 +2,14 @@ import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
+import type { ReactNode } from "react"
 import { getShopProducts } from "@/lib/shopProducts"
+import { getUgcForProduct } from "@/lib/ugc"
 import ProductCTA from "@/components/ProductCTA"
 import ProductGallery from "@/components/ProductGallery"
 import { ProductReviews } from "@/components/ReviewSection"
 import LiveProductRating from "@/components/LiveProductRating"
+import UGCSection from "@/components/UGCSection"
 import styles from "./product.module.css"
 
 type ProductPageProps = {
@@ -45,6 +48,33 @@ export async function generateMetadata({
   }
 }
 
+function renderBold(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g)
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>
+    }
+    return <span key={i}>{part}</span>
+  })
+}
+
+function AccordionItem({
+  title,
+  defaultOpen = false,
+  children,
+}: {
+  title: string
+  defaultOpen?: boolean
+  children: ReactNode
+}) {
+  return (
+    <details className={styles.accordionItem} open={defaultOpen}>
+      <summary className={styles.accordionSummary}>{title}</summary>
+      <div className={styles.accordionContent}>{children}</div>
+    </details>
+  )
+}
+
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params
   const products = await getShopProducts()
@@ -53,6 +83,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
   if (!product) {
     notFound()
   }
+
+  const ugcItems = await getUgcForProduct(product.slug)
 
   return (
     <section className={`section ${styles.product}`}>
@@ -86,49 +118,52 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
         </div>
 
-        <div className={styles.tabs}>
-          <div className={styles.tabHeader}>
-            {["Description", "Ingredients", "How to Use", "Reviews"].map(
-              (tab) => (
-                <button key={tab}>{tab}</button>
-              )
-            )}
-          </div>
-          <div className={styles.tabContent}>
-            <h3>About this ritual</h3>
-            <p>
-              {product.description ?? product.shortDescription}
-            </p>
+        <UGCSection items={ugcItems} />
 
-            {product.ingredients && (
-              <div className={styles.ingredientSection}>
-                <h3>Key Ingredients</h3>
-                <div className={styles.ingredientChips}>
-                  {product.ingredients.map((item) => (
-                    <span key={item} className={styles.chip}>
-                      {item}
-                    </span>
-                  ))}
-                </div>
-              </div>
+        <div className={styles.accordion}>
+          <AccordionItem title="Description" defaultOpen>
+            <p>{product.description ?? product.shortDescription}</p>
+            {product.benefits && product.benefits.length > 0 && (
+              <ul className={styles.benefitList}>
+                {product.benefits.map((b, i) => (
+                  <li key={i}>{renderBold(b)}</li>
+                ))}
+              </ul>
             )}
+          </AccordionItem>
 
-            {product.howToUse && (
-              <div className={styles.howToUseSection}>
-                <h3>How to Use</h3>
-                <ol className={styles.steps}>
-                  {product.howToUse.map((step, index) => (
-                    <li key={index} className={styles.step}>
-                      <span className={styles.stepNumber}>{index + 1}</span>
-                      <span>{step}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            )}
+          {product.ingredients && product.ingredients.length > 0 && (
+            <AccordionItem title="Ingredients">
+              <ul className={styles.ingredientList}>
+                {product.ingredients.map((item, i) => (
+                  <li key={i}>{renderBold(item)}</li>
+                ))}
+              </ul>
+            </AccordionItem>
+          )}
 
+          {product.howToUse && product.howToUse.length > 0 && (
+            <AccordionItem title="How to Use">
+              <ol className={styles.steps}>
+                {product.howToUse.map((step, index) => (
+                  <li key={index} className={styles.step}>
+                    <span className={styles.stepNumber}>{index + 1}</span>
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </AccordionItem>
+          )}
+
+          {product.goodToKnow && (
+            <AccordionItem title="Good to Know">
+              <p style={{ whiteSpace: "pre-line" }}>{product.goodToKnow}</p>
+            </AccordionItem>
+          )}
+
+          <AccordionItem title="Reviews">
             <ProductReviews productSlug={product.slug} />
-          </div>
+          </AccordionItem>
         </div>
 
         <div className={styles.related}>

@@ -39,6 +39,7 @@ import {
 import StatusBadge from "@/components/dashboard/StatusBadge"
 import { toast } from "sonner"
 import { upsertProduct, deleteProduct } from "./actions"
+import { listUgc, addUgc, deleteUgc } from "./ugc-actions"
 import { cn } from "@/lib/utils"
 
 function resolveImageUrl(url: string): string {
@@ -67,6 +68,10 @@ interface Product {
   name: string
   slug: string
   description?: string
+  benefits?: string[]
+  ingredients?: string[]
+  how_to_use?: string[]
+  good_to_know?: string
   category: string
   price: number
   compare_price?: number
@@ -94,6 +99,10 @@ const defaultForm = {
   name: "",
   slug: "",
   description: "",
+  benefits: "",
+  ingredients: "",
+  howToUse: "",
+  goodToKnow: "",
   category: "Face Pack",
   price: 0,
   comparePrice: 0,
@@ -121,6 +130,16 @@ export default function ProductsPage() {
 
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+
+  const [ugcItems, setUgcItems] = useState<any[]>([])
+  const [ugcLoading, setUgcLoading] = useState(false)
+  const [newUgc, setNewUgc] = useState({
+    video_url: "",
+    thumbnail_url: "",
+    name_handle: "",
+    rating: 0,
+    quote: "",
+  })
 
   const fetchProducts = async () => {
     const supabase = createClient()
@@ -150,6 +169,7 @@ export default function ProductsPage() {
     setEditingId(null)
     setForm({ ...defaultForm })
     setProductIdForUpload(`new-${Date.now()}`)
+    setUgcItems([])
     setFormOpen(true)
   }
 
@@ -159,6 +179,10 @@ export default function ProductsPage() {
       name: product.name,
       slug: product.slug,
       description: product.description || "",
+      benefits: (product as any).benefits ? (product as any).benefits.join("\n") : "",
+      ingredients: (product as any).ingredients ? (product as any).ingredients.join("\n") : "",
+      howToUse: (product as any).how_to_use ? (product as any).how_to_use.join("\n") : "",
+      goodToKnow: (product as any).good_to_know || "",
       category: product.category,
       price: product.price,
       comparePrice: product.compare_price || 0,
@@ -169,6 +193,11 @@ export default function ProductsPage() {
       images: product.images || [],
     })
     setFormOpen(true)
+    setUgcLoading(true)
+    listUgc(product.slug).then((r) => {
+      setUgcItems(r.items || [])
+      setUgcLoading(false)
+    })
   }
 
   const handleNameChange = (name: string) => {
@@ -193,6 +222,16 @@ export default function ProductsPage() {
       name: form.name,
       slug: form.slug,
       description: form.description || undefined,
+      benefits: form.benefits
+        ? form.benefits.split("\n").map((s) => s.trim()).filter(Boolean)
+        : undefined,
+      ingredients: form.ingredients
+        ? form.ingredients.split("\n").map((s) => s.trim()).filter(Boolean)
+        : undefined,
+      howToUse: form.howToUse
+        ? form.howToUse.split("\n").map((s) => s.trim()).filter(Boolean)
+        : undefined,
+      goodToKnow: form.goodToKnow || undefined,
       category: form.category,
       price: form.price,
       compare_price: form.comparePrice || undefined,
@@ -488,6 +527,46 @@ export default function ProductsPage() {
                 rows={3}
               />
             </div>
+            <div>
+              <Label>Benefits (one per line)</Label>
+              <Textarea
+                value={form.benefits}
+                onChange={(e) => setForm((p) => ({ ...p, benefits: e.target.value }))}
+                placeholder="Benefit 1&#10;Benefit 2"
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label>Ingredients (one per line, use **bold** for key ingredients)</Label>
+              <Textarea
+                value={form.ingredients}
+                onChange={(e) => setForm((p) => ({ ...p, ingredients: e.target.value }))}
+                placeholder="Manjistha — brightens complexion"
+                className="mt-1"
+                rows={4}
+              />
+            </div>
+            <div>
+              <Label>How to Use (one step per line)</Label>
+              <Textarea
+                value={form.howToUse}
+                onChange={(e) => setForm((p) => ({ ...p, howToUse: e.target.value }))}
+                placeholder="Wet your face&#10;Apply gently"
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label>Good to Know</Label>
+              <Textarea
+                value={form.goodToKnow}
+                onChange={(e) => setForm((p) => ({ ...p, goodToKnow: e.target.value }))}
+                placeholder="Net quantity, shelf life, patch-test note"
+                className="mt-1"
+                rows={2}
+              />
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Price (₹)</Label>
@@ -610,6 +689,102 @@ export default function ProductsPage() {
                 </div>
               </div>
             </div>
+            {editingId && (
+              <div className="space-y-3 border-t border-brand-sand pt-4">
+                <Label>Customer UGC (Customer Love)</Label>
+                {ugcLoading ? (
+                  <p className="text-sm text-brand-charcoal/40">Loading…</p>
+                ) : (
+                  <div className="space-y-2">
+                    {ugcItems.map((u: any) => (
+                      <div key={u.id} className="flex items-center gap-2 rounded border border-brand-sand p-2">
+                        {u.thumbnail_url ? (
+                          <img src={u.thumbnail_url} alt="" className="h-10 w-10 rounded object-cover" />
+                        ) : (
+                          <div className="h-10 w-10 rounded bg-brand-mist" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{u.name_handle || "Customer"}</p>
+                          {u.quote && <p className="text-xs text-brand-charcoal/60 truncate">{u.quote}</p>}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          className="text-destructive"
+                          onClick={async () => {
+                            const r = await deleteUgc(u.id, form.slug)
+                            if (r.success) {
+                              setUgcItems((prev) => prev.filter((x) => x.id !== u.id))
+                              toast.success("UGC removed")
+                            } else toast.error(r.error || "Failed")
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <div className="space-y-2 rounded border border-dashed border-brand-sand p-3">
+                      <Input
+                        placeholder="Video URL"
+                        value={newUgc.video_url}
+                        onChange={(e) => setNewUgc((p) => ({ ...p, video_url: e.target.value }))}
+                      />
+                      <Input
+                        placeholder="Thumbnail URL (optional)"
+                        value={newUgc.thumbnail_url}
+                        onChange={(e) => setNewUgc((p) => ({ ...p, thumbnail_url: e.target.value }))}
+                      />
+                      <Input
+                        placeholder="Name / handle"
+                        value={newUgc.name_handle}
+                        onChange={(e) => setNewUgc((p) => ({ ...p, name_handle: e.target.value }))}
+                      />
+                      <Input
+                        type="number"
+                        min={0}
+                        max={5}
+                        placeholder="Rating (0-5)"
+                        value={newUgc.rating}
+                        onChange={(e) => setNewUgc((p) => ({ ...p, rating: Number(e.target.value) }))}
+                      />
+                      <Textarea
+                        placeholder="Quote (optional)"
+                        value={newUgc.quote}
+                        onChange={(e) => setNewUgc((p) => ({ ...p, quote: e.target.value }))}
+                        rows={2}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={async () => {
+                          if (!newUgc.video_url.trim()) {
+                            toast.error("Video URL required")
+                            return
+                          }
+                          const r = await addUgc({
+                            product_slug: form.slug,
+                            video_url: newUgc.video_url.trim(),
+                            thumbnail_url: newUgc.thumbnail_url.trim() || undefined,
+                            name_handle: newUgc.name_handle.trim() || undefined,
+                            rating: newUgc.rating || undefined,
+                            quote: newUgc.quote.trim() || undefined,
+                          })
+                          if (r.success) {
+                            toast.success("UGC added")
+                            const lr = await listUgc(form.slug)
+                            setUgcItems(lr.items || [])
+                            setNewUgc({ video_url: "", thumbnail_url: "", name_handle: "", rating: 0, quote: "" })
+                          } else toast.error(r.error || "Failed")
+                        }}
+                      >
+                        <Plus className="mr-1.5 h-4 w-4" />
+                        Add UGC
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             <Button
               onClick={handleSave}
               disabled={saving}

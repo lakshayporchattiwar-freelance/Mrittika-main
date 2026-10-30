@@ -8,6 +8,10 @@ export async function upsertProduct(product: {
   name: string
   slug: string
   description?: string
+  benefits?: string[]
+  ingredients?: string[]
+  howToUse?: string[]
+  goodToKnow?: string
   category: string
   price: number
   compare_price?: number
@@ -28,6 +32,10 @@ export async function upsertProduct(product: {
     name: product.name,
     slug: product.slug,
     description: product.description || null,
+    benefits: product.benefits || null,
+    ingredients: product.ingredients || null,
+    how_to_use: product.howToUse || null,
+    good_to_know: product.goodToKnow || null,
     category: product.category,
     price: product.price,
     compare_price: product.compare_price || null,

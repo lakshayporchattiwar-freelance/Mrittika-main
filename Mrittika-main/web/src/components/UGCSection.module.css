@@ -1,0 +1,132 @@
+.section {
+  margin-top: var(--space-16);
+}
+
+.heading {
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-6);
+}
+
+.row {
+  display: flex;
+  gap: var(--space-4);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: var(--space-2);
+  -webkit-overflow-scrolling: touch;
+}
+
+.tile {
+  flex: 0 0 220px;
+  scroll-snap-align: start;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+@media (max-width: 768px) {
+  .tile {
+    flex: 0 0 60%;
+  }
+}
+
+.thumbWrap {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-white-warm);
+  border: 1px solid var(--color-border-soft);
+}
+
+.thumbImg {
+  object-fit: cover;
+}
+
+.thumbPlaceholder {
+  width: 100%;
+  height: 100%;
+  background: var(--color-natural-light);
+}
+
+.playIcon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.meta {
+  margin-top: var(--space-2);
+  display: grid;
+  gap: var(--space-1);
+}
+
+.name {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--color-text-dark);
+}
+
+.stars {
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+}
+
+.quote {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: 1002;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.playerWrap {
+  width: 90vw;
+  max-width: 420px;
+  aspect-ratio: 9 / 16;
+  background: #000;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.player {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}

@@ -83,6 +83,29 @@
   border-radius: var(--radius-sm);
 }
 
+.brandName {
+  margin-left: var(--space-2);
+  font-family: var(--font-display, serif);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-primary);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.brandShort {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .brandFull {
+    display: none;
+  }
+  .brandShort {
+    display: inline;
+  }
+}
+
 .links {
   display: flex;
   gap: var(--space-1);
