@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from "next/link";
+import NextImage from "next/image";
 import {
   HERO_FRAME_CONFIG,
   getFramePath,
@@ -351,8 +352,6 @@ export function HeroFramePlayer() {
           touchAction: 'pan-y',
           pointerEvents: 'none',
           willChange: 'transform',
-          transform: 'scale(1.06)',
-          transformOrigin: 'center center',
         }}
       />
 
@@ -362,6 +361,16 @@ export function HeroFramePlayer() {
           background:
             'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.0) 60%, rgba(0,0,0,0.2) 100%)',
         }}
+      />
+
+      <NextImage
+        src="/images/mrittika-icon.png"
+        alt=""
+        aria-hidden="true"
+        width={130}
+        height={130}
+        className="absolute bottom-6 right-6 z-[15] w-[90px] h-[90px] md:w-[130px] md:h-[130px] object-contain pointer-events-none drop-shadow-lg"
+        priority
       />
 
       {showOverlay && (
